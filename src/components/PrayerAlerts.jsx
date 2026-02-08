@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Bell, Volume2, VolumeX, BellRing, BellOff, X } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Bell, Volume2, VolumeX, BellRing, BellOff, X, AlertCircle } from "lucide-react";
 
 // URL locale pour l'Adhan
 const ADHAN_URL = "/adhan.mp3";
@@ -17,41 +17,74 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
   const [isPrayerTime, setIsPrayerTime] = useState(false);
   const [isAdhanPlaying, setIsAdhanPlaying] = useState(false);
   const [audioError, setAudioError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
+  
   const audioRef = useRef(null);
   const playedToday = useRef(new Set());
   const adhanTimeoutRef = useRef(null);
+  const countdownIntervalRef = useRef(null);
 
-  useEffect(() => {
-    localStorage.setItem("prayerSound", soundEnabled.toString());
-  }, [soundEnabled]);
-
+  // Initialize audio once
   useEffect(() => {
     audioRef.current = new Audio();
     audioRef.current.preload = "auto";
     
-    audioRef.current.addEventListener("ended", () => {
+    const handleEnded = () => {
       setIsAdhanPlaying(false);
-    });
+    };
+    
+    const handleError = (e) => {
+      console.log("Audio error:", e);
+      setIsAdhanPlaying(false);
+      setAudioError(true);
+    };
+    
+    audioRef.current.addEventListener("ended", handleEnded);
+    audioRef.current.addEventListener("error", handleError);
     
     return () => {
-      if (adhanTimeoutRef.current) {
-        clearTimeout(adhanTimeoutRef.current);
-      }
+      audioRef.current?.removeEventListener("ended", handleEnded);
+      audioRef.current?.removeEventListener("error", handleError);
+      stopAdhan();
     };
   }, []);
 
-  const playAdhan = async () => {
+  // Save sound preference
+  useEffect(() => {
+    localStorage.setItem("prayerSound", soundEnabled.toString());
+  }, [soundEnabled]);
+
+  const stopAdhan = useCallback(() => {
+    console.log("Stopping adhan...");
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsAdhanPlaying(false);
+    
+    if (adhanTimeoutRef.current) {
+      clearTimeout(adhanTimeoutRef.current);
+      adhanTimeoutRef.current = null;
+    }
+  }, []);
+
+  const playAdhan = useCallback(async () => {
     if (!audioRef.current) return false;
+    
+    // Stop any playing audio first
+    stopAdhan();
     
     try {
       audioRef.current.src = ADHAN_URL;
       audioRef.current.currentTime = 0;
       setIsAdhanPlaying(true);
-      await audioRef.current.play();
       setAudioError(false);
       
-      // Auto stop after 30 seconds if not manually stopped
+      await audioRef.current.play();
+      
+      // Auto stop after 30 seconds
       adhanTimeoutRef.current = setTimeout(() => {
+        console.log("Auto stopping adhan after 30 seconds");
         stopAdhan();
       }, 30000);
       
@@ -62,22 +95,10 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
       setAudioError(true);
       return false;
     }
-  };
-
-  const stopAdhan = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setIsAdhanPlaying(false);
-    }
-    if (adhanTimeoutRef.current) {
-      clearTimeout(adhanTimeoutRef.current);
-      adhanTimeoutRef.current = null;
-    }
-  };
+  }, [stopAdhan]);
 
   // Envoyer notification via Service Worker
-  const sendPrayerNotification = (prayerName) => {
+  const sendPrayerNotification = useCallback((prayerName) => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.ready.then((registration) => {
         registration.showNotification(`🕌 C'est l'heure de ${prayerName} !`, {
@@ -91,13 +112,12 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
         });
       });
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!timings) return;
 
     const now = new Date();
-    // Sunrise n'est plus affiché mais on garde pour compatibilité
     const prayerOrder = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
     
     const getPrayerTime = (prayer) => {
@@ -146,18 +166,27 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
             });
           }
           
-          setTimeout(() => setIsPrayerTime(false), 10000);
+          // Reset après 10 secondes
+          setTimeout(() => {
+            setIsPrayerTime(false);
+          }, 10000);
         }
       }
       
       setNextPrayer(foundNext);
       
-      const interval = setInterval(() => {
+      // Clear previous interval
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+      
+      countdownIntervalRef.current = setInterval(() => {
         const now = new Date();
         const diff = foundNext.time.getTime() - now.getTime();
         
         if (diff <= 0) {
           setNextPrayer(null);
+          setCountdown("");
           return;
         }
         
@@ -176,10 +205,17 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
         
         setCountdown(countdownText);
       }, 1000);
-      
-      return () => clearInterval(interval);
+    } else {
+      setNextPrayer(null);
+      setCountdown("");
     }
-  }, [timings]);
+
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, [timings, playAdhan, sendPrayerNotification]);
 
   const prayerIcons = {
     Fajr: "🌅",
@@ -189,21 +225,46 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
     Isha: "🌃"
   };
 
-  const handleToggleSound = () => {
+  const handleStopAdhan = useCallback(() => {
+    stopAdhan();
+  }, [stopAdhan]);
+
+  const handleToggleSound = useCallback(() => {
     if (isAdhanPlaying) {
       stopAdhan();
     }
-    setSoundEnabled(!soundEnabled);
-  };
+    setSoundEnabled(prev => !prev);
+  }, [isAdhanPlaying, stopAdhan]);
 
-  const handleNotificationToggle = () => {
+  const handleNotificationToggle = useCallback(() => {
     if (onToggle) {
       onToggle();
     }
-  };
+  }, [onToggle]);
+
+  // Error boundary fallback
+  if (errorMessage) {
+    return (
+      <section className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6">
+        <div className="flex items-center gap-3">
+          <AlertCircle className="text-red-400" size={24} />
+          <div>
+            <p className="text-red-300 font-medium">Erreur</p>
+            <p className="text-sm text-red-200/70">{errorMessage}</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setErrorMessage(null)}
+          className="mt-4 w-full rounded-lg bg-red-500/20 border border-red-500/30 px-4 py-2 text-sm text-red-300 hover:bg-red-500/30"
+        >
+          Réessayer
+        </button>
+      </section>
+    );
+  }
 
   return (
-    <section className={`rounded-2xl border border-gold/20 bg-deepBlue/70 backdrop-blur-xs p-6 shadow-card hover:shadow-card-hover transition-all duration-300 animate-slide-up ${isPrayerTime ? 'ring-2 ring-gold animate-pulse' : ''}`} style={{ animationDelay: '0.15s' }}>
+    <section className={`rounded-2xl border border-gold/20 bg-deepBlue/70 backdrop-blur-xs p-6 shadow-card hover:shadow-card-hover transition-all duration-300 animate-slide-up ${isPrayerTime ? 'ring-2 ring-gold' : ''}`} style={{ animationDelay: '0.15s' }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Bell className={`text-gold ${isPrayerTime ? 'animate-bounce' : ''}`} size={20} />
@@ -236,7 +297,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
       </div>
 
       {isPrayerTime && nextPrayer && (
-        <div className="mt-4 rounded-xl border border-gold bg-gradient-to-r from-gold/20 to-gold/5 p-4 animate-pulse">
+        <div className="mt-4 rounded-xl border border-gold bg-gradient-to-r from-gold/20 to-gold/5 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-3xl">🕌</span>
@@ -248,7 +309,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
             {isAdhanPlaying && (
               <button
                 type="button"
-                onClick={stopAdhan}
+                onClick={handleStopAdhan}
                 className="flex items-center gap-2 rounded-full bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-2 text-sm font-medium hover:bg-red-500/30 transition-all cursor-pointer"
               >
                 <X size={16} />
@@ -273,7 +334,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
             </div>
             <div className="text-right">
               <p className="text-xs text-lightGray/60">Prochaine prière</p>
-              <p className="text-xl font-semibold text-gold tabular-nums animate-pulse">
+              <p className="text-xl font-semibold text-gold tabular-nums">
                 {countdown}
               </p>
             </div>
@@ -306,7 +367,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
                 <VolumeX className="text-lightGray/60" size={18} />
               )}
               <span className="text-sm text-lightGray/80">
-                {isAdhanPlaying ? "Adhan en cours..." : soundEnabled ? "Adhan activé" : "Son désactivé"}
+                {isAdhanPlaying ? "🔊 Adhan en cours..." : soundEnabled ? "🔔 Adhan activé" : "🔕 Son désactivé"}
               </span>
             </div>
             <button
@@ -332,7 +393,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
 
       {audioError && isEnabled && (
         <p className="mt-2 text-xs text-red-400 text-center">
-          L'Adhan n'est pas disponible. Vérifiez votre connexion.
+          ⚠️ L'Adhan n'est pas disponible. Vérifiez votre connexion.
         </p>
       )}
     </section>

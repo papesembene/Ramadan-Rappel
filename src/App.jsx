@@ -10,7 +10,7 @@ import MoonTracker from "./components/MoonTracker.jsx";
 import { DEFAULT_CITY, PRAYER_METHOD } from "./lib/cities.js";
 import { fetchPrayerTimes } from "./lib/prayerTimes.js";
 import { loadSettings, saveSettings } from "./lib/storage.js";
-import { Home, Clock, Settings as SettingsIcon, Moon, Heart, Scale } from "lucide-react";
+import { Home, Clock, Settings as SettingsIcon, Moon, Heart, Scale, Loader2 } from "lucide-react";
 
 const PAGES = [
   { id: "home", icon: Home, label: "Accueil" },
@@ -130,6 +130,32 @@ function schedulePrayerNotifications(timings, notificationSettings, onSchedule) 
   }
 }
 
+// Loading spinner component
+function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="text-gold animate-spin" size={32} />
+    </div>
+  );
+}
+
+// Error display component
+function ErrorDisplay({ message, onRetry }) {
+  return (
+    <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-center">
+      <p className="text-red-300 mb-4">{message}</p>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 hover:bg-red-500/30 transition-all"
+        >
+          Réessayer
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [activePage, setActivePage] = useState("home");
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
@@ -137,6 +163,7 @@ export default function App() {
   const [timingsStatus, setTimingsStatus] = useState("idle");
   const [timingsDate, setTimingsDate] = useState("");
   const [notificationStatus, setNotificationStatus] = useState("idle");
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check notification permission on mount and when it changes
   useEffect(() => {
@@ -156,6 +183,7 @@ export default function App() {
     if (stored) {
       setSettings({ ...DEFAULT_SETTINGS, ...stored });
     }
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -164,6 +192,8 @@ export default function App() {
 
   useEffect(() => {
     let isMounted = true;
+    setTimingsStatus("loading");
+    
     const cacheKey = `prayerTimes-${settings.city}-${new Date().toDateString()}`;
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
@@ -174,12 +204,12 @@ export default function App() {
           setTimingsDate(parsed.date);
           setTimingsStatus("ready");
         }
-      } catch {
+      } catch (e) {
+        console.error("Cache parse error:", e);
         localStorage.removeItem(cacheKey);
       }
     }
 
-    setTimingsStatus("loading");
     fetchPrayerTimes(settings.city, PRAYER_METHOD)
       .then((data) => {
         if (!isMounted) return;
@@ -188,7 +218,8 @@ export default function App() {
         setTimingsStatus("ready");
         localStorage.setItem(cacheKey, JSON.stringify(data));
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Fetch error:", error);
         if (!isMounted) return;
         setTimingsStatus("error");
       });
@@ -263,18 +294,26 @@ export default function App() {
   };
 
   const renderPage = () => {
+    if (isLoading) {
+      return <LoadingSpinner />;
+    }
+
     switch (activePage) {
       case "home":
         return (
           <>
             <ReminderCard reminder={reminder} day={dayNumber} isManual={settings.useManualDay} />
-            {timings && (
+            {timingsStatus === "loading" ? (
+              <LoadingSpinner />
+            ) : timingsStatus === "error" ? (
+              <ErrorDisplay message="Erreur lors du chargement des horaires" />
+            ) : timings ? (
               <PrayerAlerts
                 timings={timings}
                 isEnabled={notificationStatus === "enabled"}
                 onToggle={handleNotificationToggle}
               />
-            )}
+            ) : null}
           </>
         );
       
@@ -287,13 +326,17 @@ export default function App() {
               date={timingsDate}
               status={timingsStatus}
             />
-            {timings && (
+            {timingsStatus === "loading" ? (
+              <LoadingSpinner />
+            ) : timingsStatus === "error" ? (
+              <ErrorDisplay message="Erreur lors du chargement des alertes" />
+            ) : timings ? (
               <PrayerAlerts
                 timings={timings}
                 isEnabled={notificationStatus === "enabled"}
                 onToggle={handleNotificationToggle}
               />
-            )}
+            ) : null}
           </>
         );
       
