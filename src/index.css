@@ -74,3 +74,45 @@ button, a, input, select {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 209, 102, 0.3);
 }
+
+/* Safe area padding for mobile notches */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 20px);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* Native app-like bottom nav */
+.bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+/* Prevent text size adjustment on mobile */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Better touch targets */
+button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}

@@ -212,19 +212,16 @@ export default function App() {
     console.log("Toggle clicked, current notificationStatus:", notificationStatus);
     
     if (notificationStatus === "enabled") {
-      // Disable notifications
       setNotificationStatus("denied");
       setSettings(prev => ({ ...prev, notificationsEnabled: false }));
       return;
     }
     
-    // Request permission
     if (!("Notification" in window)) {
       setNotificationStatus("unsupported");
       return;
     }
     
-    // If previously denied, show alert
     if (Notification.permission === "denied") {
       setNotificationStatus("denied");
       alert("Veuillez autoriser les notifications dans les paramètres de votre navigateur.");
@@ -335,9 +332,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-nightBlue text-softWhite pb-20">
+    <div className="min-h-screen bg-nightBlue text-softWhite pb-safe">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-nightBlue/95 backdrop-blur-sm border-b border-gold/10 px-4 py-3">
+      <header className="sticky top-0 z-50 bg-nightBlue/95 backdrop-blur-sm border-b border-gold/10 px-4 py-3 safe-top">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-xl font-semibold text-gold text-center">Ramadan Rappel</h1>
         </div>
@@ -348,28 +345,35 @@ export default function App() {
         {renderPage()}
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-nightBlue/95 backdrop-blur-sm border-t border-gold/10 py-2 px-4">
-        <div className="max-w-2xl mx-auto flex justify-around">
-          {PAGES.map((page) => {
-            const Icon = page.icon;
-            const isActive = activePage === page.id;
-            
-            return (
-              <button
-                key={page.id}
-                onClick={() => setActivePage(page.id)}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
-                  isActive
-                    ? "text-gold bg-gold/10"
-                    : "text-lightGray/60 hover:text-lightGray"
-                }`}
-              >
-                <Icon size={22} />
-                <span className="text-xs">{page.label}</span>
-              </button>
-            );
-          })}
+      {/* Bottom Navigation - Native App Style */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-nightBlue/98 backdrop-blur-xl border-t border-gold/10 py-2 px-2 safe-bottom">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex justify-between items-end">
+            {PAGES.map((page) => {
+              const Icon = page.icon;
+              const isActive = activePage === page.id;
+              
+              return (
+                <button
+                  key={page.id}
+                  onClick={() => setActivePage(page.id)}
+                  className={`flex-1 flex flex-col items-center gap-1.5 py-2 px-1 rounded-xl transition-all duration-200 ${
+                    isActive
+                      ? "text-gold bg-gradient-to-t from-gold/10 to-transparent"
+                      : "text-lightGray/50 hover:text-lightGray/80 hover:bg-white/5"
+                  }`}
+                >
+                  <Icon 
+                    size={24} 
+                    strokeWidth={isActive ? 2.5 : 2}
+                  />
+                  <span className={`text-[10px] font-medium tracking-wide ${isActive ? 'text-gold' : 'text-lightGray/60'}`}>
+                    {page.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </nav>
     </div>
