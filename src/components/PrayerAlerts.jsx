@@ -41,7 +41,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
   }, []);
 
   const playAdhan = async () => {
-    if (!audioRef.current || !soundEnabled) return false;
+    if (!audioRef.current) return false;
     
     try {
       audioRef.current.src = ADHAN_URL;
@@ -76,11 +76,29 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
     }
   };
 
+  // Envoyer notification via Service Worker
+  const sendPrayerNotification = (prayerName) => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.showNotification(`🕌 C'est l'heure de ${prayerName} !`, {
+          body: "Il est temps d'accomplir votre prière.",
+          icon: "/icons/icon.svg",
+          badge: "/icons/icon.svg",
+          tag: `prayer-${prayerName.toLowerCase()}`,
+          vibrate: [200, 100, 200, 100, 200],
+          sound: "default",
+          requireInteraction: true
+        });
+      });
+    }
+  };
+
   useEffect(() => {
     if (!timings) return;
 
     const now = new Date();
-    const prayerOrder = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
+    // Sunrise n'est plus affiché mais on garde pour compatibilité
+    const prayerOrder = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
     
     const getPrayerTime = (prayer) => {
       const time = timings[prayer];
@@ -99,29 +117,36 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
       if (!prayerTime) continue;
       
       const diff = prayerTime.getTime() - now.getTime();
-      if (diff > -2 * 60 * 1000 && diff < minDiff) {
+      if (diff > -5 * 60 * 1000 && diff < minDiff) {
         minDiff = diff;
         foundNext = { name: prayer, time: prayerTime, diff };
       }
     }
 
     if (foundNext) {
-      if (foundNext.diff <= 0 && foundNext.diff > -2 * 60 * 1000) {
+      // Jouer l'Adhan automatiquement quand l'heure arrive (fenêtre de 5 minutes)
+      if (foundNext.diff <= 0 && foundNext.diff > -5 * 60 * 1000) {
         const todayKey = `${foundNext.name}-${now.toDateString()}`;
-        if (!playedToday.current.has(todayKey) && soundEnabled) {
+        if (!playedToday.current.has(todayKey)) {
           playedToday.current.add(todayKey);
           setIsPrayerTime(true);
           
+          // Jouer l'Adhan (si app ouverte)
           playAdhan();
           
+          // Notification système (fonctionne même si app en arrière-plan)
+          sendPrayerNotification(foundNext.name);
+          
+          // Notification push si permission accordée
           if ("Notification" in window && Notification.permission === "granted") {
             new Notification(`C'est l'heure de ${foundNext.name} !`, {
               body: "Il est temps de prier",
-              icon: "/icons/icon.svg"
+              icon: "/icons/icon.svg",
+              sound: "default"
             });
           }
           
-          setTimeout(() => setIsPrayerTime(false), 5000);
+          setTimeout(() => setIsPrayerTime(false), 10000);
         }
       }
       
@@ -154,11 +179,10 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
       
       return () => clearInterval(interval);
     }
-  }, [timings, soundEnabled]);
+  }, [timings]);
 
   const prayerIcons = {
     Fajr: "🌅",
-    Sunrise: "☀️",
     Dhuhr: "🌞",
     Asr: "🌤️",
     Maghrib: "🌙",
@@ -185,7 +209,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
           <Bell className={`text-gold ${isPrayerTime ? 'animate-bounce' : ''}`} size={20} />
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-lightGray/80">Alertes Prières</p>
-            <p className="text-sm text-lightGray/70">Rappels et compte à rebours</p>
+            <p className="text-sm text-lightGray/70">Notifications et Adhan</p>
           </div>
         </div>
         <button
@@ -248,7 +272,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xs text-lightGray/60">Compte à rebours</p>
+              <p className="text-xs text-lightGray/60">Prochaine prière</p>
               <p className="text-xl font-semibold text-gold tabular-nums animate-pulse">
                 {countdown}
               </p>
@@ -264,7 +288,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
             <div>
               <p className="text-yellow-300 font-medium">Notifications désactivées</p>
               <p className="text-xs text-yellow-200/70 mt-1">
-                Appuyez sur "Désactivé" pour activer les alertes prières
+                Activez pour recevoir les alertes prières
               </p>
             </div>
           </div>
@@ -272,24 +296,37 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
       )}
 
       {isEnabled && (
-        <div className="mt-4 flex items-center justify-between rounded-xl border border-gold/10 bg-nightBlue/40 p-3">
-          <div className="flex items-center gap-2">
-            {soundEnabled && !isAdhanPlaying ? (
-              <Volume2 className="text-gold" size={18} />
-            ) : (
-              <VolumeX className="text-lightGray/60" size={18} />
-            )}
-            <span className="text-sm text-lightGray/80">
-              {isAdhanPlaying ? "Adhan en cours..." : soundEnabled ? "Son activé" : "Son désactivé"}
-            </span>
+        <div className="mt-4 space-y-3">
+          {/* Info sur le son */}
+          <div className="flex items-center justify-between rounded-xl border border-gold/10 bg-nightBlue/40 p-3">
+            <div className="flex items-center gap-2">
+              {soundEnabled && !isAdhanPlaying ? (
+                <Volume2 className="text-gold" size={18} />
+              ) : (
+                <VolumeX className="text-lightGray/60" size={18} />
+              )}
+              <span className="text-sm text-lightGray/80">
+                {isAdhanPlaying ? "Adhan en cours..." : soundEnabled ? "Adhan activé" : "Son désactivé"}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleToggleSound}
+              className="rounded-lg border border-gold/20 bg-nightBlue/60 px-3 py-1 text-xs text-lightGray hover:bg-nightBlue/80 transition-all cursor-pointer"
+            >
+              {isAdhanPlaying ? "Arrêter" : soundEnabled ? "Couper" : "Activer"}
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleToggleSound}
-            className="rounded-lg border border-gold/20 bg-nightBlue/60 px-3 py-1 text-xs text-lightGray hover:bg-nightBlue/80 transition-all cursor-pointer"
-          >
-            {isAdhanPlaying ? "Arrêter" : soundEnabled ? "Couper" : "Activer"}
-          </button>
+          
+          {/* Info notifications */}
+          <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-3">
+            <p className="text-xs text-blue-300/80">
+              🔔 Une notification apparaîtra à l'heure de chaque prière.
+            </p>
+            <p className="text-xs text-blue-300/60 mt-1">
+              L'Adhan complet joue si l'app est ouverte.
+            </p>
+          </div>
         </div>
       )}
 
