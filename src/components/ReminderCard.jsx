@@ -68,14 +68,16 @@ export default function ReminderCard({ reminder, day, isManual }) {
             <div className="rounded-xl border border-gold/10 bg-nightBlue/60 backdrop-blur-sm p-4 text-sm hover:bg-nightBlue/70 transition-colors">
               <p className="text-lightGray/70 text-xs uppercase tracking-wider">Dua pour l'Iftar</p>
               <p className="font-arabic mt-2 text-lg text-softWhite/95" dir="rtl">
-                {reminder?.dua_ifar || "Allahumma laka sumtu wa bika amantu wa 'alayka tawakkaltu"}
+                {reminder?.dua_ifar || "اللهم  لك صمت، وبك آمنت، وعلى رزقك أفطرت، فاغفر لي ماقدمت وما أخرت"}
               </p>
+              <p className="text-lightGray/60 text-xs mt-1">Allahumma laka sumtu, wa bika amantu, wa 'ala rizqika aftartu, faghfir li ma qaddamtu wa ma akhkhartu</p>
             </div>
             <div className="rounded-xl border border-gold/10 bg-nightBlue/60 backdrop-blur-sm p-4 text-sm hover:bg-nightBlue/70 transition-colors">
               <p className="text-lightGray/70 text-xs uppercase tracking-wider">Dua pour le Suhoor</p>
               <p className="font-arabic mt-2 text-lg text-softWhite/95" dir="rtl">
-                {reminder?.dua_suhoor || "Allahumma barik lana fi shahrina"}
+                {reminder?.dua_suhoor || "اللَّهُمَّ بَارِكْ لَنَا فِي شَهْرِنَا وَقِنَا وَبَارِكْ لَنَا فِيهِ"}
               </p>
+              <p className="text-lightGray/60 text-xs mt-1">Allahumma barik lana fi shahrina wa qinna wa barikna fihi</p>
             </div>
           </div>
 

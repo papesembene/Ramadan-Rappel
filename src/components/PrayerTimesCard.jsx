@@ -2,7 +2,6 @@ import { normalizeTime } from "../lib/prayerTimes.js";
 
 const PRAYER_NAMES = {
   Fajr: { label: "Fajr", icon: "🌅" },
-  Sunrise: { label: "Sunrise", icon: "☀️" },
   Dhuhr: { label: "Dhuhr", icon: "🌞" },
   Asr: { label: "Asr", icon: "🌤️" },
   Maghrib: { label: "Maghrib", icon: "🌅" },

@@ -5,16 +5,19 @@ import PrayerTimesCard from "./components/PrayerTimesCard.jsx";
 import PrayerAlerts from "./components/PrayerAlerts.jsx";
 import SettingsCard from "./components/SettingsCard.jsx";
 import DhikrCounter from "./components/DhikrCounter.jsx";
+import FastingRules from "./components/FastingRules.jsx";
+import MoonTracker from "./components/MoonTracker.jsx";
 import { DEFAULT_CITY, PRAYER_METHOD } from "./lib/cities.js";
 import { fetchPrayerTimes } from "./lib/prayerTimes.js";
 import { loadSettings, saveSettings } from "./lib/storage.js";
-import { Home, Clock, Settings as SettingsIcon, BookOpen, Heart } from "lucide-react";
+import { Home, Clock, Settings as SettingsIcon, Moon, Heart, Scale } from "lucide-react";
 
 const PAGES = [
   { id: "home", icon: Home, label: "Accueil" },
   { id: "prayers", icon: Clock, label: "Prières" },
   { id: "dhikr", icon: Heart, label: "Dhikr" },
-  { id: "quran", icon: BookOpen, label: "Coran" },
+  { id: "moon", icon: Moon, label: "Lune" },
+  { id: "rules", icon: Scale, label: "Règles" },
   { id: "settings", icon: SettingsIcon, label: "Paramètres" }
 ];
 
@@ -300,13 +303,11 @@ export default function App() {
       case "dhikr":
         return <DhikrCounter />;
       
-      case "quran":
-        return (
-          <section className="rounded-2xl border border-gold/20 bg-deepBlue/70 backdrop-blur-xs p-6 shadow-card">
-            <h2 className="text-xl font-semibold text-softWhite mb-4">Rappels du Coran</h2>
-            <ReminderCard reminder={reminder} day={dayNumber} isManual={settings.useManualDay} />
-          </section>
-        );
+      case "moon":
+        return <MoonTracker />;
+      
+      case "rules":
+        return <FastingRules />;
       
       case "settings":
         return (
@@ -358,13 +359,13 @@ export default function App() {
               <button
                 key={page.id}
                 onClick={() => setActivePage(page.id)}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all ${
+                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all ${
                   isActive
                     ? "text-gold bg-gold/10"
                     : "text-lightGray/60 hover:text-lightGray"
                 }`}
               >
-                <Icon size={24} />
+                <Icon size={22} />
                 <span className="text-xs">{page.label}</span>
               </button>
             );
