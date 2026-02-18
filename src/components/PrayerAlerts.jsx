@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Bell, Volume2, VolumeX, BellRing, BellOff, X, AlertCircle } from "lucide-react";
+import { normalizeTime } from "../lib/prayerTimes.js";
 
 // URL locale pour l'Adhan
 const ADHAN_URL = "/adhan.mp3";
+const PRAYER_ORDER = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+const PRAYER_WINDOW_MS = 5 * 60 * 1000;
 
 export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -22,7 +25,8 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
   const audioRef = useRef(null);
   const playedToday = useRef(new Set());
   const adhanTimeoutRef = useRef(null);
-  const countdownIntervalRef = useRef(null);
+  const tickerIntervalRef = useRef(null);
+  const audioUnlockedRef = useRef(false);
 
   // Initialize audio once
   useEffect(() => {
@@ -41,10 +45,28 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
     
     audioRef.current.addEventListener("ended", handleEnded);
     audioRef.current.addEventListener("error", handleError);
+
+    const unlockAudio = async () => {
+      if (!audioRef.current || audioUnlockedRef.current) return;
+      try {
+        audioRef.current.src = ADHAN_URL;
+        audioRef.current.muted = true;
+        await audioRef.current.play();
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current.muted = false;
+        audioUnlockedRef.current = true;
+      } catch {
+        audioRef.current.muted = false;
+      }
+    };
+    
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
     
     return () => {
       audioRef.current?.removeEventListener("ended", handleEnded);
       audioRef.current?.removeEventListener("error", handleError);
+      window.removeEventListener("pointerdown", unlockAudio);
       stopAdhan();
     };
   }, []);
@@ -69,7 +91,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
   }, []);
 
   const playAdhan = useCallback(async () => {
-    if (!audioRef.current) return false;
+    if (!audioRef.current || !soundEnabled) return false;
     
     // Stop any playing audio first
     stopAdhan();
@@ -95,127 +117,122 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
       setAudioError(true);
       return false;
     }
-  }, [stopAdhan]);
+  }, [soundEnabled, stopAdhan]);
 
   // Envoyer notification via Service Worker
-  const sendPrayerNotification = useCallback((prayerName) => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.ready.then((registration) => {
-        registration.showNotification(`🕌 C'est l'heure de ${prayerName} !`, {
-          body: "Il est temps d'accomplir votre prière.",
-          icon: "/icons/icon.svg",
-          badge: "/icons/icon.svg",
-          tag: `prayer-${prayerName.toLowerCase()}`,
-          vibrate: [200, 100, 200, 100, 200],
-          sound: "default",
-          requireInteraction: true
-        });
+  const sendPrayerNotification = useCallback(async (prayerName) => {
+    if (!("serviceWorker" in navigator)) return;
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(`🕌 C'est l'heure de ${prayerName} !`, {
+        body: "Il est temps d'accomplir votre prière.",
+        icon: "/icons/icon.svg",
+        badge: "/icons/icon.svg",
+        tag: `prayer-${prayerName.toLowerCase()}`,
+        vibrate: [200, 100, 200, 100, 200],
+        requireInteraction: true
       });
+    } catch (error) {
+      console.error("Notification error:", error);
     }
   }, []);
+
+  const getPrayerTime = useCallback((prayerName) => {
+    const raw = timings?.[prayerName];
+    if (!raw) return null;
+    const clean = normalizeTime(raw);
+    const [hoursStr, minutesStr] = clean.split(":");
+    const hours = Number(hoursStr);
+    const minutes = Number(minutesStr);
+    
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+    
+    const prayerDate = new Date();
+    prayerDate.setHours(hours, minutes, 0, 0);
+    return prayerDate;
+  }, [timings]);
 
   useEffect(() => {
     if (!timings) return;
 
-    const now = new Date();
-    const prayerOrder = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
-    
-    const getPrayerTime = (prayer) => {
-      const time = timings[prayer];
-      if (!time) return null;
-      const [hours, minutes] = time.split(":").map(Number);
-      const prayerDate = new Date();
-      prayerDate.setHours(hours, minutes, 0, 0);
-      return prayerDate;
-    };
+    const updatePrayerState = () => {
+      const now = new Date();
+      let foundCurrent = null;
+      let foundNext = null;
+      let minFutureDiff = Infinity;
 
-    let foundNext = null;
-    let minDiff = Infinity;
+      for (const prayer of PRAYER_ORDER) {
+        const prayerTime = getPrayerTime(prayer);
+        if (!prayerTime) continue;
 
-    for (const prayer of prayerOrder) {
-      const prayerTime = getPrayerTime(prayer);
-      if (!prayerTime) continue;
-      
-      const diff = prayerTime.getTime() - now.getTime();
-      if (diff > -5 * 60 * 1000 && diff < minDiff) {
-        minDiff = diff;
-        foundNext = { name: prayer, time: prayerTime, diff };
+        const diff = prayerTime.getTime() - now.getTime();
+
+        if (diff <= 0 && diff > -PRAYER_WINDOW_MS) {
+          foundCurrent = { name: prayer, time: prayerTime, diff };
+        }
+
+        if (diff >= 0 && diff < minFutureDiff) {
+          minFutureDiff = diff;
+          foundNext = { name: prayer, time: prayerTime, diff };
+        }
       }
-    }
 
-    if (foundNext) {
-      // Jouer l'Adhan automatiquement quand l'heure arrive (fenêtre de 5 minutes)
-      if (foundNext.diff <= 0 && foundNext.diff > -5 * 60 * 1000) {
-        const todayKey = `${foundNext.name}-${now.toDateString()}`;
+      if (foundCurrent) {
+        const todayKey = `${foundCurrent.name}-${now.toDateString()}`;
+        setIsPrayerTime(true);
+        setNextPrayer(foundCurrent);
+        setCountdown("Maintenant");
+
         if (!playedToday.current.has(todayKey)) {
           playedToday.current.add(todayKey);
-          setIsPrayerTime(true);
-          
-          // Jouer l'Adhan (si app ouverte)
-          playAdhan();
-          
-          // Notification système (fonctionne même si app en arrière-plan)
-          sendPrayerNotification(foundNext.name);
-          
-          // Notification push si permission accordée
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification(`C'est l'heure de ${foundNext.name} !`, {
-              body: "Il est temps de prier",
-              icon: "/icons/icon.svg",
-              sound: "default"
-            });
-          }
-          
-          // Reset après 10 secondes
-          setTimeout(() => {
-            setIsPrayerTime(false);
-          }, 10000);
-        }
-      }
-      
-      setNextPrayer(foundNext);
-      
-      // Clear previous interval
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-      }
-      
-      countdownIntervalRef.current = setInterval(() => {
-        const now = new Date();
-        const diff = foundNext.time.getTime() - now.getTime();
-        
-        if (diff <= 0) {
-          setNextPrayer(null);
-          setCountdown("");
-          return;
-        }
-        
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        
-        let countdownText = "";
-        if (hours > 0) {
-          countdownText = `${hours}h ${minutes}m ${seconds}s`;
-        } else if (minutes > 0) {
-          countdownText = `${minutes}m ${seconds}s`;
-        } else {
-          countdownText = `${seconds}s`;
-        }
-        
-        setCountdown(countdownText);
-      }, 1000);
-    } else {
-      setNextPrayer(null);
-      setCountdown("");
-    }
 
-    return () => {
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
+          if (isEnabled && soundEnabled) {
+            playAdhan();
+          }
+          if (isEnabled) {
+            sendPrayerNotification(foundCurrent.name);
+          }
+        }
+        return;
+      }
+
+      setIsPrayerTime(false);
+      if (!foundNext) {
+        setNextPrayer(null);
+        setCountdown("");
+        return;
+      }
+
+      setNextPrayer(foundNext);
+      const diff = foundNext.time.getTime() - now.getTime();
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      if (hours > 0) {
+        setCountdown(`${hours}h ${minutes}m ${seconds}s`);
+      } else if (minutes > 0) {
+        setCountdown(`${minutes}m ${seconds}s`);
+      } else {
+        setCountdown(`${Math.max(seconds, 0)}s`);
       }
     };
-  }, [timings, playAdhan, sendPrayerNotification]);
+
+    updatePrayerState();
+    if (tickerIntervalRef.current) {
+      clearInterval(tickerIntervalRef.current);
+    }
+    tickerIntervalRef.current = setInterval(updatePrayerState, 1000);
+
+    return () => {
+      if (tickerIntervalRef.current) {
+        clearInterval(tickerIntervalRef.current);
+        tickerIntervalRef.current = null;
+      }
+    };
+  }, [getPrayerTime, isEnabled, playAdhan, sendPrayerNotification, soundEnabled, timings]);
 
   const prayerIcons = {
     Fajr: "🌅",
@@ -254,7 +271,11 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
           </div>
         </div>
         <button
-          onClick={() => setErrorMessage(null)}
+          onClick={() => {
+            setErrorMessage(null);
+            setAudioError(false);
+            stopAdhan();
+          }}
           className="mt-4 w-full rounded-lg bg-red-500/20 border border-red-500/30 px-4 py-2 text-sm text-red-300 hover:bg-red-500/30"
         >
           Réessayer

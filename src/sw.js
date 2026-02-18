@@ -65,12 +65,16 @@ function scheduleNotificationsFromList() {
     if (notif.time > now) {
       const delay = notif.time - now;
       setTimeout(() => {
-        if (notif.type === "SUHOOR_NOTIFICATION") {
-          showSuhoorNotification();
-        } else if (notif.type === "IFTAR_NOTIFICATION") {
-          showIftarNotification();
-        } else if (notif.type === "PRAYER_NOTIFICATION") {
-          showPrayerNotification(notif.prayerName);
+        try {
+          if (notif.type === "SUHOOR_NOTIFICATION") {
+            showSuhoorNotification();
+          } else if (notif.type === "IFTAR_NOTIFICATION") {
+            showIftarNotification();
+          } else if (notif.type === "PRAYER_NOTIFICATION" && notif.prayerName) {
+            showPrayerNotification(notif.prayerName);
+          }
+        } catch (error) {
+          console.error("Erreur lors de l'affichage de la notification:", error);
         }
       }, delay);
       return true;
