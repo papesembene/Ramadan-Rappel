@@ -5,20 +5,31 @@ import PrayerTimesCard from "./components/PrayerTimesCard.jsx";
 import PrayerAlerts from "./components/PrayerAlerts.jsx";
 import SettingsCard from "./components/SettingsCard.jsx";
 import DhikrCounter from "./components/DhikrCounter.jsx";
+import DailyAdhkar from "./components/DailyAdhkar.jsx";
 import FastingRules from "./components/FastingRules.jsx";
 import MoonTracker from "./components/MoonTracker.jsx";
+import BottomSheet from "./components/BottomSheet.jsx";
+import MenuGrid from "./components/MenuGrid.jsx";
+import SunnahFriday from "./components/SunnahFriday.jsx";
 import { DEFAULT_CITY, PRAYER_METHOD } from "./lib/cities.js";
 import { fetchPrayerTimes } from "./lib/prayerTimes.js";
 import { loadSettings, saveSettings } from "./lib/storage.js";
-import { Home, Clock, Settings as SettingsIcon, Moon, Heart, Scale, Loader2 } from "lucide-react";
+import { Home, Clock, Settings as SettingsIcon, Moon, Heart, Scale, Loader2, BookOpen, MoreHorizontal, Crown } from "lucide-react";
 
-const PAGES = [
+// Primary navigation - always visible in bottom bar
+const PRIMARY_PAGES = [
   { id: "home", icon: Home, label: "Accueil" },
   { id: "prayers", icon: Clock, label: "Prières" },
+  { id: "adhkar", icon: BookOpen, label: "Adhkar" }
+];
+
+// Secondary navigation - shown in bottom sheet menu
+const SECONDARY_PAGES = [
   { id: "dhikr", icon: Heart, label: "Dhikr" },
   { id: "moon", icon: Moon, label: "Lune" },
   { id: "rules", icon: Scale, label: "Règles" },
-  { id: "settings", icon: SettingsIcon, label: "Paramètres" }
+  { id: "settings", icon: SettingsIcon, label: "Paramètres" },
+  { id: "sunnah", icon: Crown, label: "Sunnah" }
 ];
 
 const DEFAULT_SETTINGS = {
@@ -164,6 +175,7 @@ export default function App() {
   const [timingsDate, setTimingsDate] = useState("");
   const [notificationStatus, setNotificationStatus] = useState("idle");
   const [isLoading, setIsLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Check notification permission on mount and when it changes
   useEffect(() => {
@@ -293,6 +305,11 @@ export default function App() {
     }
   };
 
+  const handleMenuItemClick = (pageId) => {
+    setActivePage(pageId);
+    setIsMenuOpen(false);
+  };
+
   const renderPage = () => {
     if (isLoading) {
       return <LoadingSpinner />;
@@ -340,6 +357,9 @@ export default function App() {
           </>
         );
       
+      case "adhkar":
+        return <DailyAdhkar />;
+      
       case "dhikr":
         return <DhikrCounter />;
       
@@ -348,6 +368,10 @@ export default function App() {
       
       case "rules":
         return <FastingRules />;
+      
+      
+      case "sunnah":
+        return <SunnahFriday />;
       
       case "settings":
         return (
@@ -375,24 +399,24 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-nightBlue text-softWhite pb-safe">
+    <div className="min-h-screen bg-nightBlue text-softWhite">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-nightBlue/95 backdrop-blur-sm border-b border-gold/10 px-4 py-3 safe-top">
+      <header className="sticky top-0 z-20 bg-nightBlue/95 backdrop-blur-sm border-b border-gold/10 px-4 py-4 safe-top">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-xl font-semibold text-gold text-center">Ramadan Rappel</h1>
+          <h1 className="text-xl font-semibold text-gold text-center tracking-tight">Ramadan Rappel</h1>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-4 py-4">
+      {/* Main Content - Added bottom padding for new nav height */}
+      <main className="max-w-2xl mx-auto px-4 py-4 pb-24">
         {renderPage()}
       </main>
 
-      {/* Bottom Navigation - Native App Style */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-nightBlue/98 backdrop-blur-xl border-t border-gold/10 py-2 px-2 safe-bottom">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex justify-between items-end">
-            {PAGES.map((page) => {
+      {/* Bottom Navigation - Simplified 4-Item Layout */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-nightBlue/98 backdrop-blur-xl border-t border-gold/10 safe-bottom z-30">
+        <div className="max-w-2xl mx-auto px-4 py-2">
+          <div className="flex justify-around items-center gap-2">
+            {PRIMARY_PAGES.map((page) => {
               const Icon = page.icon;
               const isActive = activePage === page.id;
               
@@ -400,25 +424,58 @@ export default function App() {
                 <button
                   key={page.id}
                   onClick={() => setActivePage(page.id)}
-                  className={`flex-1 flex flex-col items-center gap-1.5 py-2 px-1 rounded-xl transition-all duration-200 ${
+                  className={`flex flex-col items-center gap-1.5 py-3 px-6 rounded-2xl transition-all duration-200 ${
                     isActive
-                      ? "text-gold bg-gradient-to-t from-gold/10 to-transparent"
-                      : "text-lightGray/50 hover:text-lightGray/80 hover:bg-white/5"
+                      ? "text-gold bg-gradient-to-t from-gold/15 to-gold/5 shadow-glow"
+                      : "text-lightGray/60 hover:text-lightGray hover:bg-white/5"
                   }`}
                 >
                   <Icon 
                     size={24} 
                     strokeWidth={isActive ? 2.5 : 2}
                   />
-                  <span className={`text-[10px] font-medium tracking-wide ${isActive ? 'text-gold' : 'text-lightGray/60'}`}>
+                  <span className={`text-[10px] font-semibold tracking-wide ${isActive ? 'text-gold' : 'text-lightGray/70'}`}>
                     {page.label}
                   </span>
                 </button>
               );
             })}
+            
+            {/* More Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(true)}
+              className={`flex flex-col items-center gap-1.5 py-3 px-6 rounded-2xl transition-all duration-200 ${
+                SECONDARY_PAGES.some(p => p.id === activePage)
+                  ? "text-gold bg-gradient-to-t from-gold/15 to-gold/5 shadow-glow"
+                  : "text-lightGray/60 hover:text-lightGray hover:bg-white/5"
+              }`}
+            >
+              <MoreHorizontal 
+                size={24} 
+                strokeWidth={SECONDARY_PAGES.some(p => p.id === activePage) ? 2.5 : 2}
+              />
+              <span className={`text-[10px] font-semibold tracking-wide ${
+                SECONDARY_PAGES.some(p => p.id === activePage) ? 'text-gold' : 'text-lightGray/70'
+              }`}>
+                Plus
+              </span>
+            </button>
           </div>
         </div>
       </nav>
+
+      {/* Bottom Sheet Menu for Secondary Pages */}
+      <BottomSheet
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        title="Menu"
+      >
+        <MenuGrid
+          items={SECONDARY_PAGES}
+          onItemClick={handleMenuItemClick}
+          currentPage={activePage}
+        />
+      </BottomSheet>
     </div>
   );
 }

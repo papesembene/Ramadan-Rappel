@@ -101,10 +101,18 @@ html {
   text-size-adjust: 100%;
 }
 
-/* Better touch targets */
+/* Better touch targets for mobile */
 button {
   min-height: 44px;
   min-width: 44px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Improve button active states on mobile */
+button:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
 }
 
 /* Smooth animations */

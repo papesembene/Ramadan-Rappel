@@ -31,6 +31,18 @@ async function showDailyNotification() {
   );
 }
 
+async function showFridaySunnahNotification() {
+  await showNotification(
+    "🌟 Sunnah du Vendredi",
+    "N'oubliez pas de lire la Sourate Al-Kahf et de suivre les sunnah du vendredi !",
+    "sunnah-vendredi",
+    [
+      { action: "open", title: "Ouvrir" },
+      { action: "stop", title: "Arrêter" }
+    ]
+  );
+}
+
 async function showSuhoorNotification() {
   await showNotification(
     "⏰ Suhoor",
@@ -134,6 +146,8 @@ self.addEventListener("notificationclick", (event) => {
 self.addEventListener("periodicsync", (event) => {
   if (event.tag === "daily-reminder") {
     event.waitUntil(showDailyNotification());
+  } else if (event.tag === "friday-sunnah") {
+    event.waitUntil(showFridaySunnahNotification());
   }
 });
 

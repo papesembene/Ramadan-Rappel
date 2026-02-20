@@ -329,4 +329,16 @@
     " dua_ifar": "Allahumma awsilna wa ahsanna ghuna ila Ramadan al-mubarak",
     "dua_suhoor": "Allahumma Taqabbal Minna"
   }
+,
+  {
+    "day": 31,
+    "source": "Sunnah",
+    "reference": "Sourate Al-Kahf",
+    "arabic": "\u0644\u0648\u062f\u0627\u064b \u0623\u0646 \u0646\u0632\u0644\u0646\u0627 \u0639\u0644\u064a\u0643 \u0627\u0644\u0642\u0631\u0622\u0646 \u0644\u062f\u0639\u0648\u0629 \u0627\u0644\u0646\u0627\u0633\u060c \u0648\u0628\u064a\u0627\u0646\u0627\u062a \u0645\u0646 \u0627\u0644\u0647\u062f\u0649 \u0648\u0627\u0644\u0641\u0631\u0642\u0627\u0646",
+    "fr": "Nous avons certes fait descendre le Coran comme guide pour les hommes et preuves claires de la guidée et du discernement.",
+    "dhikr": "Lire la Sourate Al-Kahf (18:1-110)",
+    "status": "ready",
+    "dua_ifar": "Allahumma barik lana fi yawm al-jumu\u0027ah wa a\u0161lih lana fihi",
+    "dua_suhoor": "Allahumma barik lana fi yawm al-jumu\u0027ah wa a\u0161lih lana fihi"
+  }
 ]
