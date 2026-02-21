@@ -169,42 +169,55 @@ self.addEventListener("message", (event) => {
     event.waitUntil(showPrayerNotification(event.data.prayerName));
   } else if (event.data?.type === "SKIP_WAIT") {
     self.skipWaiting();
+  } else if (event.data?.type === "CHECK_FOR_UPDATE") {
+    // Force check for update
+    self.registration.update().then(() => {
+      console.log("Update check triggered");
+    });
   }
 });
 
-// Activation immédiate du Service Worker
+// Activation immédiate du Service Worker avec mise à jour automatique
 self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Détection des nouvelles versions
+// Détection des nouvelles versions avec rechargement automatique
 self.addEventListener("activate", (event) => {
+  // Claim all clients immediately
   event.waitUntil(clients.claim());
   
-  // Envoyer un message pour déclencher le rechargement automatique
-  event.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-    if (clientList.length > 0) {
-      // Envoyer un message aux clients ouverts pour notifier de la mise à jour et déclencher le rechargement
+  // Notify all clients to refresh
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       clientList.forEach(client => {
         client.postMessage({
           type: "REFRESH_APP",
-          message: "Mise à jour en cours..."
+          message: "Mise à jour automatique en cours..."
         });
       });
-    }
-  }));
+    })
+  );
 });
 
-// Gestion des messages depuis l'app
-self.addEventListener("message", (event) => {
-  if (event.data?.type === "SHOW_DAILY_NOTIFICATION") {
-    event.waitUntil(showDailyNotification());
-  } else if (event.data?.type === "SCHEDULE_PRAYER_NOTIFICATIONS") {
-    scheduledNotifications = event.data.schedules || [];
-    scheduleNotificationsFromList();
-  } else if (event.data?.type === "SHOW_PRAYER_NOTIFICATION") {
-    event.waitUntil(showPrayerNotification(event.data.prayerName));
-  } else if (event.data?.type === "SKIP_WAIT") {
-    self.skipWaiting();
+// Listen for updatefound to auto-update
+self.addEventListener("updatefound", () => {
+  const newRegistration = self.registration;
+  const installingWorker = newRegistration.installing;
+  
+  if (installingWorker) {
+    installingWorker.addEventListener("statechange", () => {
+      if (installingWorker.state === "installed" && navigator.serviceWorker.controller) {
+        // New version available, notify to refresh
+        clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+          clientList.forEach(client => {
+            client.postMessage({
+              type: "REFRESH_APP",
+              message: "Nouvelle version disponible"
+            });
+          });
+        });
+      }
+    });
   }
 });

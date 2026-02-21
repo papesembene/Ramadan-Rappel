@@ -181,6 +181,7 @@ export default function App() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
 
+    // Handle messages from Service Worker
     const handleSWMessage = (event) => {
       if (event.data?.type === "REFRESH_APP") {
         // Automatically reload the page to get the latest version
@@ -188,10 +189,37 @@ export default function App() {
       }
     };
 
+    // Handle controller change (when new SW takes over)
+    const handleControllerChange = () => {
+      // New service worker activated, reload to get latest
+      window.location.reload();
+    };
+
     navigator.serviceWorker.addEventListener("message", handleSWMessage);
+    
+    // Check for updates periodically (every 5 minutes)
+    const updateInterval = setInterval(async () => {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          await registration.update();
+        }
+      } catch (e) {
+        console.log("Update check failed:", e);
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Listen for controller change
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.addEventListener("controllerchange", handleControllerChange);
+    }
 
     return () => {
       navigator.serviceWorker.removeEventListener("message", handleSWMessage);
+      clearInterval(updateInterval);
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.removeEventListener("controllerchange", handleControllerChange);
+      }
     };
   }, []);
 
