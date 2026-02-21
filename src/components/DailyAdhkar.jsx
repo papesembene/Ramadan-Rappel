@@ -4,36 +4,36 @@ import { ArrowRight, ArrowLeft, Sun, Moon, BookOpen, Check, Clock, Volume2 } fro
 const MORNING_DHIKR = [
   {
     id: "morning_1",
-    arabic: "\u0627\u0644\u0644\u0647\u0645 \u0628\u0643 \u0623\u0635\u0628\u0646\u0627 \u0648\u0628\u0643 \u0623\u0645\u0633\u064a\u0646\u0627 \u0648\u0628\u0643 \u0646\u062d\u064a\u0627 \u0648\u0639\u0644\u0649 \u0641\u0644\u0643 \u0627\u0644\u062e\u064a\u0631 \u0648\u0639\u0644\u0649 \u0633\u0646\u062a\u0643 \u062a\u0648\u0641\u064a\u062a \u0648\u062d\u0633\u0628\u0643 \u0639\u0644\u0649 \u0627\u0644\u062d\u0633\u0646 \u0627\u0644\u062d\u0633\u0646 \u0627\u0644\u0639\u0638\u064a\u0645",
-    phonetic: "Allahumma bika asbahnaa wa bika amsaynaa wa bika nahyaa wa bika namootu wa ilaykal-maseer",
+    arabic: "اللهم بك أصبحنا وبك أمسينا وبك نحيى وبك نموت وإليك المصير",
+    phonetic: "Allahumma bika asbahna wa bika amsayna wa bika nahya wa bika namutu wa ilaykal-masir",
     reference: "Sahih Muslim 2713",
     translation: "O Allah, par Toi nous entrons dans la matinée, par Toi nous entrons dans le soir, par Toi nous vivons et par Toi nous mourrons, et vers Toi est la résurrection."
   },
   {
     id: "morning_2",
-    arabic: "\u0623\u0635\u0628\u062d\u0646\u0627 \u0648\u0623\u0645\u0633\u064a\u0646\u0627 \u0639\u0644\u0649 \u0641\u0637\u0631\u0629 \u0627\u0644\u0625\u0633\u0644\u0627\u0645",
-    phonetic: "Asbahnaa wa amsaynaa 'alaa fitratil-islaam",
+    arabic: "أصبحنا وأمسينا على فطرة الإسلام",
+    phonetic: "Asbahna wa amsayna ala fitratil-islam",
     reference: "Sahih Muslim 2613",
     translation: "Nous entrons dans la matinée et dans le soir sur la fitra de l'Islam."
   },
   {
     id: "morning_3",
-    arabic: "\u0633\u0628\u062d\u0627\u0646 \u0627\u0644\u0644\u0647 \u0648\u0628\u062d\u0645\u062f\u0647 \u0648\u062a\u0628\u0627\u0631\u0643 \u0627\u0644\u0633\u062a\u0631 \u0627\u0644\u0639\u0638\u064a\u0645",
-    phonetic: "Subhaanallaahi wa bihamdihi wa tabaarakasmuh, wa ta'aalaa jadduhu, wa laa ilaaha ghayruhu",
+    arabic: "سبحان الله وبحمده وتبارك اسمه وتعالى جده ولا إله غيره",
+    phonetic: "Subhanallahi wa bihamdihi wa tabarakasmuhu wa ta'ala jadduhu wa la ilaha ghayruhu",
     reference: "Sahih Al-Bukhari 6330",
     translation: "Gloire à Allah et que Son éloge soit célébré, et qu'Il soit exalté, le Seigneur Très Grand."
   },
   {
     id: "morning_4",
-    arabic: "\u0644\u0627 \u0625\u0644\u0647\u0629 \u0625\u0644\u0627 \u0627\u0644\u0644\u0647 \u0648\u062d\u062f\u0647 \u0644\u0627 \u0634\u0631\u064a\u0643",
-    phonetic: "Laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu, wa huwa 'alaa kulli shay'in qadeer",
+    arabic: "لا إله إلا الله وحده لا شريك له له الملك وله الحمد وهو على كل شيء قدير",
+    phonetic: "La ilaha illallah wahdahu la sharika lahu lahul-mulku wa lahul-hamdu wa huwa ala kulli shayin qadir",
     reference: "Sahih Al-Bukhari 7376",
     translation: "Il n'y a de divinité qu'Allah, l'Unique, Il n'a point d'associé. À Lui appartient la royauté et à Lui l'éloge, et Il est Omnipotent."
   },
   {
     id: "morning_5",
-    arabic: "\u0633\u0628\u062d\u0627\u0646 \u0627\u0644\u0644\u0647 \u0648\u0628\u062d\u0645\u062f\u0647 \u0633\u0628\u062d\u0627\u0646 \u0627\u0644\u0644\u0647 \u0627\u0644\u0639\u0638\u064a\u0645",
-    phonetic: "Subhaanallaahi wa bihamdihi, subhaanallaahil-'adheem",
+    arabic: "سبحان الله وبحمده سبحان الله العظيم",
+    phonetic: "Subhanallahi wa bihamdihi subhanallahi-l-adhim",
     reference: "Sahih Muslim 2726",
     translation: "Gloire à Allah et que Son éloge soit célébré, cent fois."
   }
@@ -42,36 +42,36 @@ const MORNING_DHIKR = [
 const EVENING_DHIKR = [
   {
     id: "evening_1",
-    arabic: "\u0627\u0644\u0644\u0647\u0645 \u0628\u0643 \u0623\u0645\u0633\u064a\u0646\u0627 \u0648\u0628\u0643 \u0623\u0635\u0628\u0646\u0627 \u0648\u0639\u0644\u0649 \u0625\u0644\u0647\u0643 \u0648\u0627\u062c\u062a\u0643 \u0648\u0639\u0644\u0649 \u0646\u0628\u064a\u0643 \u062a\u0648\u0641\u064a\u062a \u0648\u062d\u0633\u0628\u0643 \u0627\u0644\u062d\u0633\u0646 \u0627\u0644\u062d\u0633\u0646 \u0627\u0644\u0639\u0638\u064a\u0645",
-    phonetic: "Allahumma bika amsaynaa wa bika asbahnaa wa 'alaa Ilaahika wajjahtu wa 'alaa sunnati nabahtu wa ta'aaala jadduka wa laa ilaaha ghayruka",
+    arabic: "اللهم بك أمسينا وبك أصبحنا وإلهك وجهت ونبعت سنتك وتعلى جدك ولا إله غيرك",
+    phonetic: "Allahumma bika amsayna wa bika asbahna wa ilahika wajjahtu wa nabtutu sunnataka wa ta'ala jadduka wa la ilaha ghayruka",
     reference: "Sahih Muslim 2713",
     translation: "O Allah, par Toi nous entrons dans le soir, par Toi nous entrons dans la matinée, par Toi nous vivons et par Toi nous mourrons, et vers Toi est la résurrection."
   },
   {
     id: "evening_2",
-    arabic: "\u0623\u0645\u0633\u064a\u0646\u0627 \u0648\u0623\u0635\u0628\u0646\u0627 \u0639\u0644\u0649 \u0641\u0637\u0631\u0629 \u0627\u0644\u0625\u0633\u0644\u0627\u0645",
-    phonetic: "Amsaynaa wa asbahnaa 'alaa fitratil-islaam",
+    arabic: "أمسينا وأصبحنا على فطرة الإسلام",
+    phonetic: "Amsayna wa asbahna ala fitratil-islam",
     reference: "Sahih Muslim 2613",
     translation: "Nous entrons dans le soir et dans la matinée sur la fitra de l'Islam."
   },
   {
     id: "evening_3",
-    arabic: "\u0633\u0628\u062d\u0627\u0646 \u0627\u0644\u0644\u0647 \u0648\u0628\u062d\u0645\u062f\u0647 \u0648\u062a\u0628\u0627\u0631\u0643 \u0627\u0644\u0633\u062a\u0631 \u0627\u0644\u0639\u0638\u064a\u0645",
-    phonetic: "Subhaanallaahi wa bihamdihi wa tabaarakasmuh, wa ta'aalaa jadduhu, wa laa ilaaha ghayruhu",
+    arabic: "سبحان الله وبحمده وتبارك اسمه وتعالى جده ولا إله غيره",
+    phonetic: "Subhanallahi wa bihamdihi wa tabarakasmuhu wa ta'ala jadduhu wa la ilaha ghayruhu",
     reference: "Sahih Al-Bukhari 6330",
     translation: "Gloire à Allah et que Son éloge soit célébré, et qu'Il soit exalté, le Seigneur Très Grand."
   },
   {
     id: "evening_4",
-    arabic: "\u0644\u0627 \u0625\u0644\u0647\u0629 \u0625\u0644\u0627 \u0627\u0644\u0644\u0647 \u0648\u062d\u062f\u0647 \u0644\u0627 \u0634\u0631\u064a\u0643",
-    phonetic: "Laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu, wa huwa 'alaa kulli shay'in qadeer",
+    arabic: "لا إله إلا الله وحده لا شريك له له الملك وله الحمد وهو على كل شيء قدير",
+    phonetic: "La ilaha illallah wahdahu la sharika lahu lahul-mulku wa lahul-hamdu wa huwa ala kulli shayin qadir",
     reference: "Sahih Al-Bukhari 7376",
     translation: "Il n'y a de divinité qu'Allah, l'Unique, Il n'a point d'associé. À Lui appartient la royauté et à Lui l'éloge, et Il est Omnipotent."
   },
   {
     id: "evening_5",
-    arabic: "\u0633\u0628\u062d\u0627\u0646 \u0627\u0644\u0644\u0647 \u0648\u0628\u062d\u0645\u062f\u0647 \u0633\u0628\u062d\u0627\u0646 \u0627\u0644\u0644\u0647 \u0627\u0644\u0639\u0638\u064a\u0645",
-    phonetic: "Subhaanallaahi wa bihamdihi, subhaanallaahil-'adheem",
+    arabic: "سبحان الله وبحمده سبحان الله العظيم",
+    phonetic: "Subhanallahi wa bihamdihi subhanallahi-l-adhim",
     reference: "Sahih Muslim 2726",
     translation: "Gloire à Allah et que Son éloge soit célébré, cent fois."
   }
@@ -80,22 +80,22 @@ const EVENING_DHIKR = [
 const SPECIAL_DHIKR = [
   {
     id: "special_1",
-    arabic: "\u0627\u0644\u0644\u0647\u0645 \u0623\u0646\u062a \u0631\u0628\u064a \u0644\u0627 \u0625\u0644\u0647\u0629 \u0625\u0644\u0627 \u0623\u0646\u062a \u0648\u062d\u062f\u0643 \u0644\u0627 \u0634\u0631\u064a\u0643 \u0644\u0643 \u0627\u0644\u0645\u0644\u0643 \u0648\u0644\u0643 \u0627\u0644\u062d\u0645\u062f",
-    phonetic: "Allahumma anta rabbee laa ilaaha illaa anta, khalaqtanee wa-ana 'abduka, wa-ana 'alaa 'ahdika wa-wa'dika mas-tata'tu, a'oodhu bika min sharri maa shana'tu, aboo-o laka bini'matika 'alayya, wa-aboo-o bizambee, faghfirlee, fa-innahu laa yaghfiruz-zunooba illaa anta",
+    arabic: "اللهم أنت ربي لا إله إلا أنت خلقتني وأنا عبدك وأنا على عهدك ووعدك ما استطعت أعوذ بك من شر ما صنعت أبوء لك بنعمتك علي وأبوء بذنبي فاغفرني فإنه لا يغفر الذنوب إلا أنت",
+    phonetic: "Allahumma anta rabbi la ilaha illa anta khalaqtani wa ana abduka wa ana ala ahdika wa wa'dika ma statatu a'udhu bika min sharri ma sanatu abuu laka bi-ni'matika alayya wa abuu bi-dhanbi faghfir li fa-innahu la yaghfiru-l-dhunuba illa anta",
     reference: "Sahih Al-Bukhari 7405",
     translation: "O Allah, Tu es mon Seigneur, il n'y a de divinité qu'Allah, Tu as créé, Tu es mon Seigneur, à Toi appartiennent les plus beaux noms."
   },
   {
     id: "special_2",
-    arabic: "\u0633\u0628\u062d\u0627\u0646 \u0627\u0644\u0644\u0647 \u0648\u0628\u062d\u0645\u062f\u0647 \u0633\u0628\u062d\u0627\u0646 \u0627\u0644\u0644\u0647 \u0627\u0644\u0639\u0638\u064a\u0645",
-    phonetic: "Subhaanallaahi wa bihamdihi, subhaanallaahil-'adheem",
+    arabic: "سبحان الله وبحمده سبحان الله العظيم",
+    phonetic: "Subhanallahi wa bihamdihi subhanallahi-l-adhim",
     reference: "Sahih Muslim 2726",
     translation: "Gloire à Allah et que Son éloge soit célébré, cent fois."
   },
   {
     id: "special_3",
-    arabic: "\u0644\u0627 \u0625\u0644\u0647\u0629 \u0625\u0644\u0627 \u0627\u0644\u0644\u0647 \u0648\u062d\u062f\u0647 \u0644\u0627 \u0634\u0631\u064a\u0643 \u0644\u0647 \u0627\u0644\u0645\u0644\u0643 \u0648\u0644\u0647 \u0627\u0644\u062d\u0645\u062f \u0648\u0647\u0648 \u0639\u0644\u0649 \u0643\u0644\u0651 \u0634\u064a\u0621 \u0642\u062f\u064a\u0631",
-    phonetic: "Laa ilaaha illallaahu wahdahu laa shareeka lahu, lahul-mulku wa lahul-hamdu, wa huwa 'alaa kulli shay'in qadeer",
+    arabic: "لا إله إلا الله وحده لا شريك له له الملك وله الحمد وهو على كل شيء قدير",
+    phonetic: "La ilaha illallah wahdahu la sharika lahu lahul-mulku wa lahul-hamdu wa huwa ala kulli shayin qadir",
     reference: "Sahih Al-Bukhari 7376",
     translation: "Il n'y a de divinité qu'Allah, l'Unique, Il n'a point d'associé. À Lui appartient la royauté et à Lui l'éloge, et Il est Omnipotent."
   }
@@ -104,29 +104,29 @@ const SPECIAL_DHIKR = [
 const QUL_HUWALLAH = [
   {
     id: "qul_1",
-    arabic: "\u0642\u0644 \u0647\u0648 \u0627\u0644\u0644\u0647 \u0623\u062d\u062f",
-    phonetic: "Qul huwa-llaahu ahad",
+    arabic: "قل هو الله أحد",
+    phonetic: "Qul huwa Allahu ahad",
     reference: "Sourate Al-Ikhlas 112:1",
     translation: "Dis : 'Il est Allah, l'Unique'."
   },
   {
     id: "qul_2",
-    arabic: "\u0627\u0644\u0644\u0647 \u0627\u0644\u0635\u0645\u062f",
-    phonetic: "Allaahu s-samad",
+    arabic: "الله الصمد",
+    phonetic: "Allahus-samad",
     reference: "Sourate Al-Ikhlas 112:2",
     translation: "Allah, le Maître absolu de toute chose."
   },
   {
     id: "qul_3",
-    arabic: "\u0644\u0645 \u064a\u0644\u062f \u0648\u0644\u0645 \u064a\u0648\u0644\u062f",
-    phonetic: "Lam yalid wa lam yoolad",
+    arabic: "لم يلد ولم يولد",
+    phonetic: "Lam yalid wa lam yulad",
     reference: "Sourate Al-Ikhlas 112:3",
     translation: "Il n'engendre pas et n'a pas été engendré."
   },
   {
     id: "qul_4",
-    arabic: "\u0648\u0644\u0645 \u064a\u0643\u0646 \u0644\u0647 \u0643\u0641\u0648\u0627 \u0623\u062d\u062f",
-    phonetic: "Wa lam yakul-laahu kufuwan ahad",
+    arabic: "لم يكن له كفواً أحد",
+    phonetic: "Lam yakun lahu kufuwan ahad",
     reference: "Sourate Al-Ikhlas 112:4",
     translation: "Et nul n'est égal à Lui."
   }
@@ -311,3 +311,4 @@ export default function DailyAdhkar() {
     </section>
   );
 }
+
