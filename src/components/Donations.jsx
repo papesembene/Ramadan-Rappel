@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Heart, QrCode, TrendingUp, Users, Utensils, HandHeart, Gift, ChevronUp } from "lucide-react";
+import { Heart, QrCode, TrendingUp, Users, Utensils, HandHeart, Gift, ChevronUp, Phone, Copy, Check } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function Donations() {
   const [selectedAmount, setSelectedAmount] = useState(null);
@@ -10,6 +11,14 @@ export default function Donations() {
   ]);
   const [totalRaised, setTotalRaised] = useState(0);
   const [goal] = useState(50000); // Objectif de 50,000 XOF
+  const [copiedWave, setCopiedWave] = useState(false);
+  const [copiedOrange, setCopiedOrange] = useState(false);
+
+  const PHONE_NUMBER = "781157773";
+
+  // URLs de paiement Wave et Orange Money
+  const wavePaymentUrl = `https://wave.com/pay/${PHONE_NUMBER}`;
+  const orangeMoneyUrl = `tel:${PHONE_NUMBER}`;
 
   useEffect(() => {
     // Calculer le total des dons
@@ -27,6 +36,21 @@ export default function Donations() {
 
   const handleAmountClick = (amount) => {
     setSelectedAmount(amount);
+  };
+
+  const copyToClipboard = async (text, type) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (type === 'wave') {
+        setCopiedWave(true);
+        setTimeout(() => setCopiedWave(false), 2000);
+      } else {
+        setCopiedOrange(true);
+        setTimeout(() => setCopiedOrange(false), 2000);
+      }
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   return (
@@ -125,11 +149,43 @@ export default function Donations() {
         </div>
         
         {selectedAmount && (
-          <div className="text-center text-sm text-lightGray/70">
-            <p>Sélectionné: <span className="text-gold font-bold">{selectedAmount} XOF</span></p>
-            <p className="mt-1">Scannez le QR code ci-dessous pour effectuer votre don</p>
+          <div className="text-center text-sm text-lightGray/70 bg-gold/5 rounded-lg p-3 border border-gold/20">
+            <p>Montant sélectionné: <span className="text-gold font-bold">{selectedAmount} XOF</span></p>
+            <p className="mt-2 text-xs">Scannez le QR code ci-dessous pour effectuer votre don de {selectedAmount} XOF</p>
           </div>
         )}
+      </div>
+
+      {/* Phone Number Section */}
+      <div className="rounded-xl border border-gold/10 bg-nightBlue/60 backdrop-blur-sm p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Phone className="text-gold" size={20} />
+          <h3 className="text-gold font-medium text-lg">Numéro de téléphone</h3>
+        </div>
+        
+        <p className="text-sm text-lightGray/70 mb-4">
+          Vous pouvez également faire un virement directement sur ce numéro
+        </p>
+        
+        <div className="bg-deepBlue/50 rounded-xl p-4 border border-gold/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-bold text-gold">{PHONE_NUMBER}</span>
+              <span className="text-lightGray/60 text-sm">(Tous opérateurs)</span>
+            </div>
+            <button
+              onClick={() => copyToClipboard(PHONE_NUMBER, 'wave')}
+              className="p-2 bg-gold/10 rounded-lg hover:bg-gold/20 transition-colors"
+              title="Copier le numéro"
+            >
+              {copiedWave ? (
+                <Check className="text-green-400" size={20} />
+              ) : (
+                <Copy className="text-gold" size={20} />
+              )}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* QR Codes Section */}
@@ -140,33 +196,47 @@ export default function Donations() {
         </div>
         
         <p className="text-sm text-lightGray/70 mb-4">
-          Scannez le QR code avec votre application Wave ou Orange Money
+          Scannez le QR code avec votre application {selectedAmount ? `${selectedAmount} XOF - ` : ''}Wave ou Orange Money
         </p>
         
         <div className="grid grid-cols-2 gap-4">
           {/* Wave QR */}
           <div className="bg-white p-4 rounded-xl">
-            <div className="flex items-center justify-center mb-2">
-              <span className="font-bold text-deepBlue">WAVE</span>
+            <div className="flex items-center justify-center mb-3">
+              <span className="font-bold text-deepBlue text-lg">WAVE</span>
             </div>
-            <div className="bg-gray-200 aspect-square rounded-lg flex items-center justify-center">
-              <QrCode className="text-gray-400" size={80} />
+            <div className="bg-white aspect-square rounded-lg flex items-center justify-center p-2">
+              <QRCodeSVG
+                value={wavePaymentUrl}
+                size={140}
+                bgColor="#ffffff"
+                fgColor="#000000"
+                level="M"
+                includeMargin={false}
+              />
             </div>
-            <p className="text-center text-xs text-gray-600 mt-2">
-              Ouvrez Wave → Scan
+            <p className="text-center text-xs text-gray-600 mt-3 font-medium">
+              Ouvrez Wave → Scanner
             </p>
           </div>
           
           {/* Orange Money QR */}
           <div className="bg-orange-500 p-4 rounded-xl">
-            <div className="flex items-center justify-center mb-2">
-              <span className="font-bold text-white">ORANGE</span>
+            <div className="flex items-center justify-center mb-3">
+              <span className="font-bold text-white text-lg">ORANGE</span>
             </div>
-            <div className="bg-white aspect-square rounded-lg flex items-center justify-center">
-              <QrCode className="text-gray-400" size={80} />
+            <div className="bg-white aspect-square rounded-lg flex items-center justify-center p-2">
+              <QRCodeSVG
+                value={orangeMoneyUrl}
+                size={140}
+                bgColor="#ffffff"
+                fgColor="#000000"
+                level="M"
+                includeMargin={false}
+              />
             </div>
-            <p className="text-center text-xs text-white mt-2">
-              Ouvrez Orange Money → Payer
+            <p className="text-center text-xs text-white mt-3 font-medium">
+              Orange Money → Payer
             </p>
           </div>
         </div>
