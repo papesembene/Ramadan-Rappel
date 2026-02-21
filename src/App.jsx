@@ -11,10 +11,11 @@ import MoonTracker from "./components/MoonTracker.jsx";
 import BottomSheet from "./components/BottomSheet.jsx";
 import MenuGrid from "./components/MenuGrid.jsx";
 import SunnahFriday from "./components/SunnahFriday.jsx";
+import Donations from "./components/Donations.jsx";
 import { DEFAULT_CITY, PRAYER_METHOD } from "./lib/cities.js";
 import { fetchPrayerTimes } from "./lib/prayerTimes.js";
 import { loadSettings, saveSettings } from "./lib/storage.js";
-import { Home, Clock, Settings as SettingsIcon, Moon, Heart, Scale, Loader2, BookOpen, MoreHorizontal, Crown } from "lucide-react";
+import { Home, Clock, Settings as SettingsIcon, Moon, Heart, Scale, Loader2, BookOpen, MoreHorizontal, Crown, Hand, Heart as HeartIcon, DollarSign, TrendingUp } from "lucide-react";
 
 // Primary navigation - always visible in bottom bar
 const PRIMARY_PAGES = [
@@ -28,6 +29,7 @@ const SECONDARY_PAGES = [
   { id: "dhikr", icon: Heart, label: "Dhikr" },
   { id: "moon", icon: Moon, label: "Lune" },
   { id: "rules", icon: Scale, label: "Règles" },
+  { id: "donations", icon: Hand, label: "Dons" },
   { id: "settings", icon: SettingsIcon, label: "Paramètres" },
   { id: "sunnah", icon: Crown, label: "Sunnah" }
 ];
@@ -372,6 +374,9 @@ export default function App() {
       
       case "sunnah":
         return <SunnahFriday />;
+      
+      case "donations":
+        return <Donations />;
       
       case "settings":
         return (
