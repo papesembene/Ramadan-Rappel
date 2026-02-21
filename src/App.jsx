@@ -496,7 +496,7 @@ export default function App() {
       </BottomSheet>
 
       {/* Footer with slogan */}
-      <footer className="fixed bottom-14 left-0 right-0 text-center py-1 text-[10px] text-lightGray/40 z-10 pointer-events-none">
+      <footer className="fixed bottom-14 left-0 right-0 text-center py-1 text-[10px] text-lightGray/60 bg-nightBlue/80 z-10 pointer-events-none">
         Sem's - Coding to Success
       </footer>
     </div>
