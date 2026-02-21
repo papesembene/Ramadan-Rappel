@@ -494,6 +494,11 @@ export default function App() {
           currentPage={activePage}
         />
       </BottomSheet>
+
+      {/* Footer with slogan */}
+      <footer className="fixed bottom-16 left-0 right-0 text-center py-2 text-xs text-lightGray/40 safe-bottom z-20">
+        Sem's - Coding to Success
+      </footer>
     </div>
   );
 }
