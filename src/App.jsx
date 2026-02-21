@@ -428,6 +428,11 @@ export default function App() {
       {/* Main Content - Added bottom padding for new nav height */}
       <main className="max-w-2xl mx-auto px-4 py-4 pb-24">
         {renderPage()}
+        
+        {/* Footer with slogan - placed inside main for proper spacing */}
+        <div className="mt-8 pt-4 border-t border-gold/10 text-center">
+          <p className="text-[10px] text-lightGray/60">Sem's - Coding to Success</p>
+        </div>
       </main>
 
       {/* Bottom Navigation - Simplified 4-Item Layout */}
@@ -494,11 +499,6 @@ export default function App() {
           currentPage={activePage}
         />
       </BottomSheet>
-
-      {/* Footer with slogan */}
-      <footer className="fixed bottom-14 left-0 right-0 text-center py-1 text-[10px] text-lightGray/60 bg-nightBlue/80 z-10 pointer-events-none">
-        Sem's - Coding to Success
-      </footer>
     </div>
   );
 }
