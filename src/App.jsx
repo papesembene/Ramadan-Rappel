@@ -177,6 +177,24 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Listen for Service Worker messages for automatic updates
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+
+    const handleSWMessage = (event) => {
+      if (event.data?.type === "REFRESH_APP") {
+        // Automatically reload the page to get the latest version
+        window.location.reload();
+      }
+    };
+
+    navigator.serviceWorker.addEventListener("message", handleSWMessage);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener("message", handleSWMessage);
+    };
+  }, []);
+
   // Check notification permission on mount and when it changes
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {

@@ -177,6 +177,34 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
+// Détection des nouvelles versions
 self.addEventListener("activate", (event) => {
   event.waitUntil(clients.claim());
+  
+  // Envoyer un message pour déclencher le rechargement automatique
+  event.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+    if (clientList.length > 0) {
+      // Envoyer un message aux clients ouverts pour notifier de la mise à jour et déclencher le rechargement
+      clientList.forEach(client => {
+        client.postMessage({
+          type: "REFRESH_APP",
+          message: "Mise à jour en cours..."
+        });
+      });
+    }
+  }));
+});
+
+// Gestion des messages depuis l'app
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SHOW_DAILY_NOTIFICATION") {
+    event.waitUntil(showDailyNotification());
+  } else if (event.data?.type === "SCHEDULE_PRAYER_NOTIFICATIONS") {
+    scheduledNotifications = event.data.schedules || [];
+    scheduleNotificationsFromList();
+  } else if (event.data?.type === "SHOW_PRAYER_NOTIFICATION") {
+    event.waitUntil(showPrayerNotification(event.data.prayerName));
+  } else if (event.data?.type === "SKIP_WAIT") {
+    self.skipWaiting();
+  }
 });
