@@ -17,7 +17,8 @@ export default function Donations() {
   const PHONE_NUMBER = "781157773";
 
   // URLs de paiement Wave et Orange Money
-  const wavePaymentUrl = `https://wave.com/pay/${PHONE_NUMBER}`;
+  // Format Wave: domaine Sénégal
+  const wavePaymentUrl = `https://www.wave.sn/pay/${PHONE_NUMBER}`;
   const orangeMoneyUrl = `tel:${PHONE_NUMBER}`;
 
   useEffect(() => {
@@ -200,19 +201,17 @@ export default function Donations() {
         </p>
         
         <div className="grid grid-cols-2 gap-4">
-          {/* Wave QR */}
+          {/* Wave QR - Image statique (à remplacer par votre vrai QR Code Wave) */}
           <div className="bg-white p-4 rounded-xl">
             <div className="flex items-center justify-center mb-3">
               <span className="font-bold text-deepBlue text-lg">WAVE</span>
             </div>
             <div className="bg-white aspect-square rounded-lg flex items-center justify-center p-2">
-              <QRCodeSVG
-                value={wavePaymentUrl}
-                size={140}
-                bgColor="#ffffff"
-                fgColor="#000000"
-                level="M"
-                includeMargin={false}
+              {/* Remplacez 'wave-qr.png' par le chemin de votre vrai QR Code Wave */}
+              <img 
+                src="/wave-qr.png" 
+                alt="QR Code Wave" 
+                className="w-full h-full object-contain"
               />
             </div>
             <p className="text-center text-xs text-gray-600 mt-3 font-medium">
