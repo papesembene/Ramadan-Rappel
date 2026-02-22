@@ -48,42 +48,45 @@ export default function Donations() {
         rel="noopener noreferrer"
         className="block w-full"
       >
-        <button className="w-full py-4 px-6 bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-400 hover:to-yellow-400 text-deepBlue font-bold text-lg rounded-xl shadow-lg shadow-gold/30 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+        <button className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-400 hover:to-yellow-400 text-deepBlue font-bold rounded-xl shadow-lg shadow-gold/30 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-base sm:text-lg"
         >
-          <svg viewBox="0 0 24 24" className="w-8 h-8" fill="#1a1a2e">
+          <svg viewBox="0 0 24 24" className="w-6 h-6 sm:w-8 sm:h-8" fill="#1a1a2e">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
           </svg>
           Faire un don avec Wave
-          <ExternalLink size={20} />
+          <ExternalLink size={18} />
         </button>
       </a>
 
       {/* QR Code Section */}
-      <div className="rounded-xl border border-gold/20 bg-nightBlue/60 backdrop-blur-sm p-5">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="rounded-xl border border-gold/20 bg-nightBlue/60 backdrop-blur-sm p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
           <QrCode className="text-gold" size={20} />
           <h3 className="text-gold font-medium text-lg">Scanner le QR Code</h3>
         </div>
         
-        <p className="text-sm text-lightGray/70 mb-4">
+        <p className="text-sm text-lightGray/70 mb-3 sm:mb-4">
           Scannez ce code QR avec votre application Wave pour faire un don.
         </p>
 
-        {/* PDF Viewer */}
-        <iframe 
-          src="/static_wave_qr.pdf" 
-          className="w-full h-64 rounded-lg border border-gold/20 bg-white/5"
-          title="Wave QR Code"
-        />
+        {/* QR Code Image */}
+        <div className="flex justify-center mb-3">
+          <img 
+            src="/qr_code.png" 
+            alt="Wave QR Code" 
+            className="max-w-full h-auto rounded-lg border border-gold/20"
+            style={{ maxHeight: '250px' }}
+          />
+        </div>
         
         {/* Download Link */}
         <a 
-          href="/static_wave_qr.pdf" 
-          download="wave_qr_code.pdf"
-          className="mt-3 flex items-center justify-center gap-2 text-gold hover:text-yellow-400 transition-colors"
+          href="/qr_code.png" 
+          download="wave_qr_code.png"
+          className="flex items-center justify-center gap-2 text-gold hover:text-yellow-400 transition-colors text-sm"
         >
-          <Download size={18} />
-          <span className="text-sm">Télécharger le QR Code</span>
+          <Download size={16} />
+          <span>Télécharger le QR Code</span>
         </a>
       </div>
 
