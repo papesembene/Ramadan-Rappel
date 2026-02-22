@@ -1,4 +1,4 @@
-import { Phone, Copy, Check, Heart, Target, Users, Utensils, Info } from "lucide-react";
+import { Phone, Copy, Check, Heart, Utensils, ExternalLink, QrCode, Download, Users } from "lucide-react";
 import { useState } from "react";
 
 export default function Donations() {
@@ -7,14 +7,7 @@ export default function Donations() {
 
   const PHONE_WAVE = "781157773";
   const PHONE_ORANGE = "781157773";
-
-  // NOTE: La progression des dons sera disponible après validation du compte Wave Business
-  // Pour le moment, vous pouvez recevoir des dons via Wave ou Orange Money
-  const TOTAL_COLLECTED = 0; // À mettre à jour après validation Wave Business
-  const DONOR_COUNT = 0; // À mettre à jour après validation Wave Business
-  const CAMPAIGN_GOAL = 500000; // Objectif en Francs CFA (sera activé après Wave Business)
-
-  const progress = Math.min((TOTAL_COLLECTED / CAMPAIGN_GOAL) * 100, 100);
+  const WAVE_PAYMENT_LINK = "https://pay.wave.com/m/M_sn_6n2XNnTwMXv0/c/sn/";
 
   const copyToClipboard = async (text, type) => {
     try {
@@ -46,58 +39,53 @@ export default function Donations() {
         </div>
       </div>
 
-      {/* Note importante */}
-      <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
-        <div className="flex items-start gap-3">
-          <Info className="text-blue-400 flex-shrink-0 mt-0.5" size={20} />
-          <div>
-            <p className="text-sm text-blue-200 font-medium">Progression des dons</p>
-            <p className="text-xs text-blue-300/70 mt-1">
-              La progression des dons sera disponible après validation de notre compte Wave Business.
-              En attendant, vous pouvez déjà faire un don via Wave ou Orange Money !
-            </p>
-          </div>
+      {/* Note importante - Supprimée car pas de suivi automatique */}
+
+      {/* Wave Payment Button - Primary CTA */}
+      <a
+        href={WAVE_PAYMENT_LINK}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full"
+      >
+        <button className="w-full py-4 px-6 bg-gradient-to-r from-gold to-yellow-500 hover:from-yellow-400 hover:to-yellow-400 text-deepBlue font-bold text-lg rounded-xl shadow-lg shadow-gold/30 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <svg viewBox="0 0 24 24" className="w-8 h-8" fill="#1a1a2e">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+          Faire un don avec Wave
+          <ExternalLink size={20} />
+        </button>
+      </a>
+
+      {/* QR Code Section */}
+      <div className="rounded-xl border border-gold/20 bg-nightBlue/60 backdrop-blur-sm p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <QrCode className="text-gold" size={20} />
+          <h3 className="text-gold font-medium text-lg">Scanner le QR Code</h3>
         </div>
+        
+        <p className="text-sm text-lightGray/70 mb-4">
+          Scannez ce code QR avec votre application Wave pour faire un don.
+        </p>
+
+        {/* PDF Viewer */}
+        <iframe 
+          src="/static_wave_qr.pdf" 
+          className="w-full h-64 rounded-lg border border-gold/20 bg-white/5"
+          title="Wave QR Code"
+        />
+        
+        {/* Download Link */}
+        <a 
+          href="/static_wave_qr.pdf" 
+          download="wave_qr_code.pdf"
+          className="mt-3 flex items-center justify-center gap-2 text-gold hover:text-yellow-400 transition-colors"
+        >
+          <Download size={18} />
+          <span className="text-sm">Télécharger le QR Code</span>
+        </a>
       </div>
-
-      {/* Objectif de la collecte - Sera activé après Wave Business */}
-      {TOTAL_COLLECTED > 0 && (
-        <div className="rounded-xl border border-gold/20 bg-deepBlue/70 backdrop-blur-sm p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Target className="text-gold" size={20} />
-            <h3 className="text-gold font-medium text-lg">Objectif de la collecte</h3>
-          </div>
-          
-          <p className="text-sm text-lightGray/70 mb-4">
-            Cette collecte vise à aider les familles dans le besoin pendant ce mois béni du Ramadan.
-          </p>
-
-          <div className="bg-nightBlue/50 rounded-xl p-4 border border-gold/10">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-softWhite font-medium">Progression</span>
-              <span className="text-gold font-bold">
-                {TOTAL_COLLECTED.toLocaleString()} / {CAMPAIGN_GOAL.toLocaleString()} Francs CFA
-              </span>
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="w-full bg-nightBlue/80 rounded-full h-3 overflow-hidden">
-              <div 
-                className="bg-gradient-to-r from-gold to-yellow-400 h-full rounded-full transition-all duration-500"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-2 text-lightGray/60">
-                <Users size={16} />
-                <span className="text-sm">{DONOR_COUNT} donateurs</span>
-              </div>
-              <span className="text-gold text-sm font-medium">{progress.toFixed(0)}% atteint</span>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Pourquoi donner */}
       <div className="rounded-xl border border-gold/10 bg-nightBlue/60 backdrop-blur-sm p-5">
