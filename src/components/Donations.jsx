@@ -1,32 +1,8 @@
-import { Phone, Copy, Check, Heart, Utensils, ExternalLink, QrCode, Download, Users } from "lucide-react";
+import { Heart, Utensils, ExternalLink, QrCode, Download, Users } from "lucide-react";
 import { useState } from "react";
 
 export default function Donations() {
-  const [copiedWave, setCopiedWave] = useState(false);
-  const [copiedOrange, setCopiedOrange] = useState(false);
-
-  const PHONE_WAVE = "781157773";
-  const PHONE_ORANGE = "781157773";
   const WAVE_PAYMENT_LINK = "https://pay.wave.com/m/M_sn_6n2XNnTwMXv0/c/sn/";
-
-  const copyToClipboard = async (text, type) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      if (type === "wave") {
-        setCopiedWave(true);
-        setTimeout(() => setCopiedWave(false), 2000);
-      } else {
-        setCopiedOrange(true);
-        setTimeout(() => setCopiedOrange(false), 2000);
-      }
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
-  };
-
-  const dialNumber = (phone) => {
-    window.location.href = `tel:${phone}`;
-  };
 
   return (
     <div className="space-y-6">
@@ -136,80 +112,11 @@ export default function Donations() {
         </div>
       </div>
 
-      {/* Phone Numbers Section */}
-      <div className="rounded-xl border border-gold/10 bg-nightBlue/60 backdrop-blur-sm p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Phone className="text-gold" size={20} />
-          <h3 className="text-gold font-medium text-lg">Effectuer votre don</h3>
-        </div>
-
-        <p className="text-sm text-lightGray/70 mb-4">
+      {/* Montant minimum info */}
+      <div className="rounded-xl border border-gold/10 bg-nightBlue/60 backdrop-blur-sm p-4">
+        <p className="text-sm text-lightGray/70 text-center">
           Tout montant est accepté, même 100 Francs CFA - peu importe le montant !
         </p>
-
-        {/* Wave Number */}
-        <div className="bg-deepBlue/50 rounded-xl p-4 border border-gold/10 mb-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <span className="text-green-400 font-bold text-lg">WAVE</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold text-softWhite">{PHONE_WAVE}</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => dialNumber(PHONE_WAVE)}
-                className="p-2 bg-green-500/20 rounded-lg hover:bg-green-500/30 transition-colors"
-                title="Appeler"
-              >
-                <Phone className="text-green-400" size={20} />
-              </button>
-              <button
-                onClick={() => copyToClipboard(PHONE_WAVE, "wave")}
-                className="p-2 bg-gold/10 rounded-lg hover:bg-gold/20 transition-colors"
-                title="Copier"
-              >
-                {copiedWave ? (
-                  <Check className="text-green-400" size={20} />
-                ) : (
-                  <Copy className="text-gold" size={20} />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Orange Money Number */}
-        <div className="bg-deepBlue/50 rounded-xl p-4 border border-gold/10">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <span className="text-orange-400 font-bold text-lg">ORANGE MONEY</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold text-softWhite">{PHONE_ORANGE}</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => dialNumber(PHONE_ORANGE)}
-                className="p-2 bg-orange-500/20 rounded-lg hover:bg-orange-500/30 transition-colors"
-                title="Appeler"
-              >
-                <Phone className="text-orange-400" size={20} />
-              </button>
-              <button
-                onClick={() => copyToClipboard(PHONE_ORANGE, "orange")}
-                className="p-2 bg-gold/10 rounded-lg hover:bg-gold/20 transition-colors"
-                title="Copier"
-              >
-                {copiedOrange ? (
-                  <Check className="text-green-400" size={20} />
-                ) : (
-                  <Copy className="text-gold" size={20} />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Info Banner */}
