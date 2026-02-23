@@ -30,7 +30,7 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,json,woff2,mp3}"]
       },
       srcDir: "src",
-      filename: "sw.js",
+      filename: "sw.js?v=2",
       strategies: "injectManifest"
     })
   ]

@@ -65,9 +65,18 @@ async function loadScheduledNotificationsFromDB() {
 // Load saved notifications on startup
 (async function init() {
   try {
-    scheduledNotifications = await loadScheduledNotificationsFromDB();
+    const savedNotifs = await loadScheduledNotificationsFromDB();
+    // Filter out notifications that have already passed
+    const now = Date.now();
+    scheduledNotifications = savedNotifs.filter(notif => notif.time > now);
+    
     if (scheduledNotifications.length > 0) {
       scheduleNotificationsFromList();
+    }
+    
+    // Clean up old notifications in DB
+    if (savedNotifs.length > scheduledNotifications.length) {
+      saveScheduledNotificationsToDB(scheduledNotifications);
     }
   } catch (e) {
     console.log("Init error:", e);
@@ -260,19 +269,16 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Détection des nouvelles versions avec rechargement automatique
+// Force update immediately when a new version is available
 self.addEventListener("activate", (event) => {
-  // Claim all clients immediately
-  event.waitUntil(clients.claim());
+  // Immediately claim all clients
+  event.waitUntil(self.clients.claim());
   
-  // Notify all clients to refresh
+  // Force refresh all clients
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+    self.clients.matchAll({ type: "window" }).then(clientList => {
       clientList.forEach(client => {
-        client.postMessage({
-          type: "REFRESH_APP",
-          message: "Mise à jour automatique en cours..."
-        });
+        client.navigate(client.url);
       });
     })
   );

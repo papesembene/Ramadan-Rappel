@@ -21,20 +21,51 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
   const [isAdhanPlaying, setIsAdhanPlaying] = useState(false);
   const [audioError, setAudioError] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   
   const audioRef = useRef(null);
   const playedToday = useRef(new Set());
   const adhanTimeoutRef = useRef(null);
   const tickerIntervalRef = useRef(null);
   const audioUnlockedRef = useRef(false);
-  const isInitializedRef = useRef(false);
+  const hasCheckedRef = useRef(false);
+
+  // Détecter si c'est un iOS PWA
+  const isIOS = () => {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  };
+
+  // Fonction pour obtenir le temps de prière
+  const getPrayerTime = useCallback((prayerName) => {
+    const raw = timings?.[prayerName];
+    if (!raw) return null;
+    const clean = normalizeTime(raw);
+    const [hoursStr, minutesStr] = clean.split(":");
+    const hours = Number(hoursStr);
+    const minutes = Number(minutesStr);
+    
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+    
+    const prayerDate = new Date();
+    prayerDate.setHours(hours, minutes, 0, 0);
+    return prayerDate;
+  }, [timings]);
 
   // Initialize audio and load playedToday from localStorage
   useEffect(() => {
-    // Load playedToday from localStorage
+    // Clear old data if it's from a previous version (force reset for all users)
+    // This ensures that even existing users get the fix
     try {
       const saved = localStorage.getItem("playedPrayersToday");
-      if (saved) {
+      const version = localStorage.getItem("prayerAlertsVersion");
+      
+      // If no version or old version, reset everything to fix the bug
+      if (!version || version !== "v3") {
+        localStorage.removeItem("playedPrayersToday");
+        localStorage.setItem("prayerAlertsVersion", "v3");
+        console.log("Cleared old prayer data for fix");
+      } else if (saved) {
         const parsed = JSON.parse(saved);
         const today = new Date().toDateString();
         // Only use if it's from today
@@ -62,8 +93,12 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
     audioRef.current.addEventListener("ended", handleEnded);
     audioRef.current.addEventListener("error", handleError);
 
+    // Ne pas déverrouiller l'audio automatiquement sur iOS pour éviter les problèmes
+    // L'utilisateur doit interagir avec la page pour que l'audio fonctionne
     const unlockAudio = async () => {
       if (!audioRef.current || audioUnlockedRef.current) return;
+      if (!hasUserInteracted) return; // Attendre l'interaction utilisateur
+      
       try {
         audioRef.current.src = ADHAN_URL;
         audioRef.current.muted = true;
@@ -77,13 +112,39 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
       }
     };
     
-    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    // Sur iOS, on n'ajoute pas automatiquement le listener
+    // L'audio sera déverrouillé après interaction utilisateur
+    if (!isIOS()) {
+      window.addEventListener("pointerdown", unlockAudio, { once: true });
+    }
+    
+    // Marquer comme initialisé après un délai plus long sur iOS
+    const initDelay = isIOS() ? 500 : 100;
+    setTimeout(() => setIsInitialized(true), initDelay);
     
     return () => {
       audioRef.current?.removeEventListener("ended", handleEnded);
       audioRef.current?.removeEventListener("error", handleError);
       window.removeEventListener("pointerdown", unlockAudio);
       stopAdhan();
+    };
+  }, [hasUserInteracted]);
+
+  // Track user interaction for iOS audio
+  useEffect(() => {
+    const handleInteraction = () => {
+      setHasUserInteracted(true);
+    };
+    
+    // Listen for any user interaction
+    document.addEventListener('touchstart', handleInteraction, { once: true });
+    document.addEventListener('click', handleInteraction, { once: true });
+    document.addEventListener('scroll', handleInteraction, { once: true });
+    
+    return () => {
+      document.removeEventListener('touchstart', handleInteraction);
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('scroll', handleInteraction);
     };
   }, []);
 
@@ -106,8 +167,27 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
     }
   }, []);
 
-  const playAdhan = useCallback(async () => {
+  // Vérifier si on est vraiment dans la fenêtre de temps de prière
+  const isInPrayerWindow = useCallback((prayerName) => {
+    const prayerTime = getPrayerTime(prayerName);
+    if (!prayerTime) return false;
+    
+    const now = new Date();
+    const diff = prayerTime.getTime() - now.getTime();
+    
+    // On est dans la fenêtre si on est entre le temps de prière et 5 minutes après
+    return diff <= 0 && diff > -PRAYER_WINDOW_MS;
+  }, [getPrayerTime]);
+
+  const playAdhan = useCallback(async (prayerName) => {
     if (!audioRef.current || !soundEnabled) return false;
+    if (!prayerName) return false;
+    
+    // Triple vérification: seulement jouer si on est vraiment dans la fenêtre de temps de prière
+    if (!isInPrayerWindow(prayerName)) {
+      console.log("Adhan blocked: not in prayer time window for", prayerName);
+      return false;
+    }
     
     // Stop any playing audio first
     stopAdhan();
@@ -133,7 +213,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
       setAudioError(true);
       return false;
     }
-  }, [soundEnabled, stopAdhan]);
+  }, [soundEnabled, stopAdhan, isInPrayerWindow]);
 
   // Envoyer notification via Service Worker
   const sendPrayerNotification = useCallback(async (prayerName) => {
@@ -155,23 +235,9 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
     }
   }, []);
 
-  const getPrayerTime = useCallback((prayerName) => {
-    const raw = timings?.[prayerName];
-    if (!raw) return null;
-    const clean = normalizeTime(raw);
-    const [hoursStr, minutesStr] = clean.split(":");
-    const hours = Number(hoursStr);
-    const minutes = Number(minutesStr);
-    
-    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
-    
-    const prayerDate = new Date();
-    prayerDate.setHours(hours, minutes, 0, 0);
-    return prayerDate;
-  }, [timings]);
-
   useEffect(() => {
     if (!timings) return;
+    if (!isInitialized) return;
 
     const updatePrayerState = () => {
       const now = new Date();
@@ -207,7 +273,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
         setCountdown("Maintenant");
 
         if (!playedToday.current.has(todayKey)) {
-          // Double-check we're actually at prayer time (not just on first load)
+          // Triple vérification: on s'assure qu'on est vraiment dans la fenêtre de temps de prière
           const nowForCheck = new Date();
           const prayerTimeCheck = getPrayerTime(foundCurrent.name);
           if (!prayerTimeCheck) return;
@@ -242,7 +308,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
           }
 
           if (isEnabled && soundEnabled) {
-            playAdhan();
+            playAdhan(foundCurrent.name);
           }
           if (isEnabled) {
             sendPrayerNotification(foundCurrent.name);
@@ -285,7 +351,7 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
         tickerIntervalRef.current = null;
       }
     };
-  }, [getPrayerTime, isEnabled, playAdhan, sendPrayerNotification, soundEnabled, timings]);
+  }, [getPrayerTime, isEnabled, isInitialized, playAdhan, sendPrayerNotification, soundEnabled, timings]);
 
   const prayerIcons = {
     Fajr: "🌅",
@@ -461,6 +527,16 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
             <p className="text-xs text-blue-300/60 mt-1">
               L'Adhan complet joue si l'app est ouverte.
             </p>
+            <button
+              onClick={() => {
+                // Clear all stored prayer data to reset
+                localStorage.removeItem("playedPrayersToday");
+                alert("Données réinitialisées ! L'Adhan ne jouera qu'à la prochaine heure de prière.");
+              }}
+              className="mt-2 text-xs text-yellow-400 hover:text-yellow-300 underline"
+            >
+              Réinitialiser les données
+            </button>
           </div>
         </div>
       )}
