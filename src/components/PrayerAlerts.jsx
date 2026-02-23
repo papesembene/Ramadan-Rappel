@@ -527,16 +527,6 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
             <p className="text-xs text-blue-300/60 mt-1">
               L'Adhan complet joue si l'app est ouverte.
             </p>
-            <button
-              onClick={() => {
-                // Clear all stored prayer data to reset
-                localStorage.removeItem("playedPrayersToday");
-                alert("Données réinitialisées ! L'Adhan ne jouera qu'à la prochaine heure de prière.");
-              }}
-              className="mt-2 text-xs text-yellow-400 hover:text-yellow-300 underline"
-            >
-              Réinitialiser les données
-            </button>
           </div>
         </div>
       )}

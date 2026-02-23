@@ -1,7 +1,72 @@
 /* eslint-disable no-restricted-globals */
 import { precacheAndRoute } from "workbox-precaching";
+import { initializeApp } from "firebase/app";
+import { getMessaging, onBackgroundMessage, isSupported } from "firebase/messaging";
 
 precacheAndRoute(self.__WB_MANIFEST || []);
+
+// Configuration Firebase - DOIT correspondre à celle dans firebase.js
+const firebaseConfig = {
+  apiKey: "AIzaSyAdMbAXYjUrHDXUo1cg8l-vy1-MIXpApKQ",
+  authDomain: "ramadanrappel-6dc59.firebaseapp.com",
+  projectId: "ramadanrappel-6dc59",
+  storageBucket: "ramadanrappel-6dc59.firebasestorage.app",
+  messagingSenderId: "762756521330",
+  appId: "1:762756521330:web:f7202eff573738650411eb",
+  measurementId: "G-E6T9JXHEH5"
+};
+
+// Clé VAPID générée depuis Firebase Console
+const VAPID_KEY = "BA9EPMHoeM_He-WjexKckt3dd4S8Ty3NAE4wU1O8jzylDlVn35yyo3IaZrhsckZF3LBHpVe0MwvJoNi_TiJTcqo";
+
+// Initialiser Firebase Messaging pour les messages en arrière-plan
+let firebaseMessaging = null;
+
+async function initFirebaseMessaging() {
+  try {
+    const supported = await isSupported();
+    if (!supported) {
+      console.log("FCM n'est pas supporté dans ce Service Worker");
+      return null;
+    }
+    
+    const app = initializeApp(firebaseConfig);
+    firebaseMessaging = getMessaging(app);
+    
+    // Configurer le gestionnaire de messages en arrière-plan
+    onBackgroundMessage(firebaseMessaging, (payload) => {
+      console.log("Message FCM en arrière-plan reçu:", payload);
+      
+      const notificationTitle = payload.notification?.title || "Ramadan Rappel";
+      const notificationOptions = {
+        body: payload.notification?.body || "",
+        icon: "/icons/icon.svg",
+        badge: "/icons/icon.svg",
+        tag: payload.data?.tag || "fcm-notification",
+        renotify: true,
+        vibrate: [200, 100, 200, 100, 200],
+        sound: "/adhan.mp3",
+        requireInteraction: true,
+        data: payload.data,
+        actions: [
+          { action: "open", title: "Ouvrir" },
+          { action: "close", title: "Fermer" }
+        ]
+      };
+      
+      self.registration.showNotification(notificationTitle, notificationOptions);
+    });
+    
+    console.log("Firebase Messaging initialisé dans le Service Worker");
+    return firebaseMessaging;
+  } catch (error) {
+    console.error("Erreur lors de l'initialisation de Firebase Messaging:", error);
+    return null;
+  }
+}
+
+// Initialiser Firebase Messaging au démarrage du Service Worker
+initFirebaseMessaging();
 
 let scheduledNotifications = [];
 
