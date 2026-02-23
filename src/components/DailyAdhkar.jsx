@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ArrowRight, ArrowLeft, Sun, Moon, BookOpen, Check, Clock, Volume2 } from "lucide-react";
+import { useState } from "react";
+import { Sun, Moon, BookOpen, Check, Clock, Copy, Share2 } from "lucide-react";
 
 const MORNING_DHIKR = [
   {
@@ -42,11 +42,12 @@ const MORNING_DHIKR = [
 const EVENING_DHIKR = [
   {
     id: "evening_1",
-    arabic: "اللهم بك أمسينا وبك أصبحنا وإلهك وجهت ونبعت سنتك وتعلى جدك ولا إله غيرك",
-    phonetic: "Allahumma bika amsayna wa bika asbahna wa ilahika wajjahtu wa nabtutu sunnataka wa ta'ala jadduka wa la ilaha ghayruka",
+     arabic: "اللهم بك أصبحنا وبك أمسينا وبك نحيى وبك نموت وإليك المصير",
+    phonetic: "Allahumma bika asbahna wa bika amsayna wa bika nahya wa bika namutu wa ilaykal-masir",
     reference: "Sahih Muslim 2713",
-    translation: "O Allah, par Toi nous entrons dans le soir, par Toi nous entrons dans la matinée, par Toi nous vivons et par Toi nous mourrons, et vers Toi est la résurrection."
-  },
+    translation: "O Allah, par Toi nous entrons dans la matinée, par Toi nous entrons dans le soir, par Toi nous vivons et par Toi nous mourrons, et vers Toi est la résurrection."
+  
+    },
   {
     id: "evening_2",
     arabic: "أمسينا وأصبحنا على فطرة الإسلام",
@@ -101,47 +102,45 @@ const SPECIAL_DHIKR = [
   }
 ];
 
-const QUL_HUWALLAH = [
-  {
-    id: "qul_1",
-    arabic: "قل هو الله أحد",
-    phonetic: "Qul huwa Allahu ahad",
-    reference: "Sourate Al-Ikhlas 112:1",
-    translation: "Dis : 'Il est Allah, l'Unique'."
-  },
-  {
-    id: "qul_2",
-    arabic: "الله الصمد",
-    phonetic: "Allahus-samad",
-    reference: "Sourate Al-Ikhlas 112:2",
-    translation: "Allah, le Maître absolu de toute chose."
-  },
-  {
-    id: "qul_3",
-    arabic: "لم يلد ولم يولد",
-    phonetic: "Lam yalid wa lam yulad",
-    reference: "Sourate Al-Ikhlas 112:3",
-    translation: "Il n'engendre pas et n'a pas été engendré."
-  },
-  {
-    id: "qul_4",
-    arabic: "لم يكن له كفواً أحد",
-    phonetic: "Lam yakun lahu kufuwan ahad",
-    reference: "Sourate Al-Ikhlas 112:4",
-    translation: "Et nul n'est égal à Lui."
-  }
-];
-
 export default function DailyAdhkar() {
   const [activeTab, setActiveTab] = useState("morning");
   const [completed, setCompleted] = useState({});
-  const [showDetails, setShowDetails] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
   const toggleCompletion = (id) => {
     setCompleted(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
+  };
+
+  const copyToClipboard = async (dhikr) => {
+    const text = `${dhikr.arabic}\n\n${dhikr.phonetic}\n\n${dhikr.translation}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(dhikr.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.log("Failed to copy:", err);
+    }
+  };
+
+  const shareDhikr = async (dhikr) => {
+    const text = `${dhikr.arabic}\n\n${dhikr.translation}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Adhkar - Ramadan Rappel",
+          text: text
+        });
+      } else {
+        await navigator.clipboard.writeText(text);
+        setCopiedId(dhikr.id);
+        setTimeout(() => setCopiedId(null), 2000);
+      }
+    } catch (err) {
+      console.log("Failed to share:", err);
+    }
   };
 
   const getDhikrForTime = () => {
@@ -202,16 +201,32 @@ export default function DailyAdhkar() {
                   <p className="text-xs text-lightGray">{dhikr.translation}</p>
                   <p className="text-xs text-gold mt-1">{dhikr.reference}</p>
                 </div>
-                <button
-                  onClick={() => toggleCompletion(dhikr.id)}
-                  className="p-2 rounded-lg transition-all"
-                >
-                  {completed[dhikr.id] ? (
-                    <Check className="text-gold" size={20} />
-                  ) : (
-                    <Clock className="text-lightGray" size={20} />
-                  )}
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => copyToClipboard(dhikr)}
+                    className="p-2 rounded-lg bg-nightBlue/80 text-lightGray hover:text-gold transition-all"
+                    title="Copier"
+                  >
+                    {copiedId === dhikr.id ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
+                  <button
+                    onClick={() => shareDhikr(dhikr)}
+                    className="p-2 rounded-lg bg-nightBlue/80 text-lightGray hover:text-gold transition-all"
+                    title="Partager"
+                  >
+                    <Share2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => toggleCompletion(dhikr.id)}
+                    className="p-2 rounded-lg transition-all"
+                  >
+                    {completed[dhikr.id] ? (
+                      <Check className="text-gold" size={20} />
+                    ) : (
+                      <Clock className="text-lightGray" size={20} />
+                    )}
+                  </button>
+                </div>
               </div>
             ))}
           </>
@@ -231,16 +246,32 @@ export default function DailyAdhkar() {
                   <p className="text-xs text-lightGray">{dhikr.translation}</p>
                   <p className="text-xs text-gold mt-1">{dhikr.reference}</p>
                 </div>
-                <button
-                  onClick={() => toggleCompletion(dhikr.id)}
-                  className="p-2 rounded-lg transition-all"
-                >
-                  {completed[dhikr.id] ? (
-                    <Check className="text-gold" size={20} />
-                  ) : (
-                    <Clock className="text-lightGray" size={20} />
-                  )}
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => copyToClipboard(dhikr)}
+                    className="p-2 rounded-lg bg-nightBlue/80 text-lightGray hover:text-gold transition-all"
+                    title="Copier"
+                  >
+                    {copiedId === dhikr.id ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
+                  <button
+                    onClick={() => shareDhikr(dhikr)}
+                    className="p-2 rounded-lg bg-nightBlue/80 text-lightGray hover:text-gold transition-all"
+                    title="Partager"
+                  >
+                    <Share2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => toggleCompletion(dhikr.id)}
+                    className="p-2 rounded-lg transition-all"
+                  >
+                    {completed[dhikr.id] ? (
+                      <Check className="text-gold" size={20} />
+                    ) : (
+                      <Clock className="text-lightGray" size={20} />
+                    )}
+                  </button>
+                </div>
               </div>
             ))}
           </>
@@ -260,33 +291,34 @@ export default function DailyAdhkar() {
                   <p className="text-xs text-lightGray">{dhikr.translation}</p>
                   <p className="text-xs text-gold mt-1">{dhikr.reference}</p>
                 </div>
-                <button
-                  onClick={() => toggleCompletion(dhikr.id)}
-                  className="p-2 rounded-lg transition-all"
-                >
-                  {completed[dhikr.id] ? (
-                    <Check className="text-gold" size={20} />
-                  ) : (
-                    <Clock className="text-lightGray" size={20} />
-                  )}
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => copyToClipboard(dhikr)}
+                    className="p-2 rounded-lg bg-nightBlue/80 text-lightGray hover:text-gold transition-all"
+                    title="Copier"
+                  >
+                    {copiedId === dhikr.id ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
+                  <button
+                    onClick={() => shareDhikr(dhikr)}
+                    className="p-2 rounded-lg bg-nightBlue/80 text-lightGray hover:text-gold transition-all"
+                    title="Partager"
+                  >
+                    <Share2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => toggleCompletion(dhikr.id)}
+                    className="p-2 rounded-lg transition-all"
+                  >
+                    {completed[dhikr.id] ? (
+                      <Check className="text-gold" size={20} />
+                    ) : (
+                      <Clock className="text-lightGray" size={20} />
+                    )}
+                  </button>
+                </div>
               </div>
             ))}
-            
-            <div className="mt-6 p-4 rounded-xl border border-gold/20 bg-nightBlue/60 backdrop-blur-sm">
-              <h4 className="text-sm font-semibold text-softWhite mb-3">Récitation de la Sourate Al-Ikhlas</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {QUL_HUWALLAH.map((ayah) => (
-                  <div
-                    key={ayah.id}
-                    className="p-3 rounded-lg border border-gold/20 bg-nightBlue/60 backdrop-blur-sm text-center"
-                  >
-                    <p className="text-sm font-medium text-softWhite mb-1">{ayah.arabic}</p>
-                    <p className="text-xs text-gold">{ayah.reference}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
           </>
         )}
       </div>
@@ -311,4 +343,3 @@ export default function DailyAdhkar() {
     </section>
   );
 }
-

@@ -27,9 +27,25 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
   const adhanTimeoutRef = useRef(null);
   const tickerIntervalRef = useRef(null);
   const audioUnlockedRef = useRef(false);
+  const isInitializedRef = useRef(false);
 
-  // Initialize audio once
+  // Initialize audio and load playedToday from localStorage
   useEffect(() => {
+    // Load playedToday from localStorage
+    try {
+      const saved = localStorage.getItem("playedPrayersToday");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const today = new Date().toDateString();
+        // Only use if it's from today
+        if (parsed.date === today) {
+          playedToday.current = new Set(parsed.prayers);
+        }
+      }
+    } catch (e) {
+      console.log("Error loading playedPrayersToday:", e);
+    }
+
     audioRef.current = new Audio();
     audioRef.current.preload = "auto";
     
@@ -167,8 +183,13 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
         const prayerTime = getPrayerTime(prayer);
         if (!prayerTime) continue;
 
+        // Debug: log prayer times
+        const now = new Date();
         const diff = prayerTime.getTime() - now.getTime();
+        console.log(`${prayer}: ${prayerTime.toLocaleTimeString()}, now: ${now.toLocaleTimeString()}, diff: ${diff}ms (${diff/60000}min)`);
 
+        // Only consider prayer as current if we're AT or AFTER the prayer time (within 5 min window)
+        // This prevents adhan from playing BEFORE prayer time
         if (diff <= 0 && diff > -PRAYER_WINDOW_MS) {
           foundCurrent = { name: prayer, time: prayerTime, diff };
         }
@@ -186,7 +207,39 @@ export default function PrayerAlerts({ timings, isEnabled, onToggle }) {
         setCountdown("Maintenant");
 
         if (!playedToday.current.has(todayKey)) {
+          // Double-check we're actually at prayer time (not just on first load)
+          const nowForCheck = new Date();
+          const prayerTimeCheck = getPrayerTime(foundCurrent.name);
+          if (!prayerTimeCheck) return;
+          
+          const diff = prayerTimeCheck.getTime() - nowForCheck.getTime();
+          const isActuallyPrayerTime = diff <= 0 && diff > -PRAYER_WINDOW_MS;
+          
+          console.log(`Playing adhan for ${foundCurrent.name}: isActuallyPrayerTime=${isActuallyPrayerTime}, diff=${diff}ms`);
+          
+          if (!isActuallyPrayerTime) {
+            // Don't play, just mark as played to prevent future issues
+            playedToday.current.add(todayKey);
+            try {
+              localStorage.setItem("playedPrayersToday", JSON.stringify({
+                date: nowForCheck.toDateString(),
+                prayers: Array.from(playedToday.current)
+              }));
+            } catch (e) {}
+            return;
+          }
+          
           playedToday.current.add(todayKey);
+
+          // Save to localStorage
+          try {
+            localStorage.setItem("playedPrayersToday", JSON.stringify({
+              date: now.toDateString(),
+              prayers: Array.from(playedToday.current)
+            }));
+          } catch (e) {
+            console.log("Error saving playedPrayersToday:", e);
+          }
 
           if (isEnabled && soundEnabled) {
             playAdhan();

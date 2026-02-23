@@ -1,5 +1,5 @@
 import { CITIES } from "../lib/cities.js";
-import { Bell, Moon, Sunset, Info, BellOff } from "lucide-react";
+import { Bell, Moon, Sunset, Info, BellOff, Clock } from "lucide-react";
 
 export default function SettingsCard({
   city,
@@ -180,6 +180,28 @@ export default function SettingsCard({
               } ${!isNotificationsEnabled ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {notificationSettings.iftar ? "Activé" : "Désactivé"}
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Clock className="text-gold" size={18} />
+              <div>
+                <p className="text-softWhite/80 text-sm">Notifications Prières</p>
+                <p className="text-xs text-lightGray/60">Alerte à l'heure de chaque prière</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNotificationSettingsChange({ ...notificationSettings, prayers: !notificationSettings.prayers })}
+              disabled={!isNotificationsEnabled}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-all ${
+                notificationSettings.prayers
+                  ? "bg-gold/20 text-gold"
+                  : "bg-nightBlue/80 text-lightGray"
+              } ${!isNotificationsEnabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {notificationSettings.prayers ? "Activé" : "Désactivé"}
             </button>
           </div>
         </div>

@@ -5,10 +5,79 @@ precacheAndRoute(self.__WB_MANIFEST || []);
 
 let scheduledNotifications = [];
 
-// Configuration des notifications
-const NOTIFICATION_SOUND = "default";
+// IndexedDB for persistent storage
+const DB_NAME = "RamadanRappelDB";
+const STORE_NAME = "scheduledNotifications";
 
-async function showNotification(title, body, tag, actions = []) {
+async function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+      }
+    };
+  });
+}
+
+async function saveScheduledNotificationsToDB(notifications) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    
+    // Clear existing and add new (without id if autoIncrement)
+    await store.clear();
+    for (const notif of notifications) {
+      const { id, ...notifWithoutId } = notif;
+      await store.add(notifWithoutId);
+    }
+    
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) {
+    console.log("Error saving to DB:", e);
+  }
+}
+
+async function loadScheduledNotificationsFromDB() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (e) {
+    console.log("Error loading from DB:", e);
+    return [];
+  }
+}
+
+// Load saved notifications on startup
+(async function init() {
+  try {
+    scheduledNotifications = await loadScheduledNotificationsFromDB();
+    if (scheduledNotifications.length > 0) {
+      scheduleNotificationsFromList();
+    }
+  } catch (e) {
+    console.log("Init error:", e);
+  }
+})();
+
+// Configuration des notifications
+const NOTIFICATION_SOUND = "/adhan.mp3";
+
+async function showNotification(title, body, tag, actions = [], customSound = null) {
   const options = {
     body,
     icon: "/icons/icon.svg",
@@ -16,7 +85,7 @@ async function showNotification(title, body, tag, actions = []) {
     tag,
     renotify: true,
     vibrate: [200, 100, 200, 100, 200],
-    sound: NOTIFICATION_SOUND,
+    sound: customSound || NOTIFICATION_SOUND,
     requireInteraction: true,
     actions
   };
@@ -67,14 +136,18 @@ async function showPrayerNotification(prayerName) {
     [
       { action: "open", title: "Ouvrir l'app" },
       { action: "stop", title: "Arrêter" }
-    ]
+    ],
+    "/adhan.mp3"  // Custom sound for prayer
   );
 }
 
 function scheduleNotificationsFromList() {
   const now = Date.now();
+  const validNotifications = [];
+  
   scheduledNotifications = scheduledNotifications.filter((notif) => {
     if (notif.time > now) {
+      validNotifications.push(notif);
       const delay = notif.time - now;
       setTimeout(() => {
         try {
@@ -93,6 +166,9 @@ function scheduleNotificationsFromList() {
     }
     return false;
   });
+  
+  // Save remaining to IndexedDB
+  saveScheduledNotificationsToDB(validNotifications);
 }
 
 // Gestion des événements Push
@@ -164,6 +240,8 @@ self.addEventListener("message", (event) => {
     event.waitUntil(showDailyNotification());
   } else if (event.data?.type === "SCHEDULE_PRAYER_NOTIFICATIONS") {
     scheduledNotifications = event.data.schedules || [];
+    // Save to IndexedDB for persistence
+    saveScheduledNotificationsToDB(scheduledNotifications);
     scheduleNotificationsFromList();
   } else if (event.data?.type === "SHOW_PRAYER_NOTIFICATION") {
     event.waitUntil(showPrayerNotification(event.data.prayerName));

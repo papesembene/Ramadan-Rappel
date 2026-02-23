@@ -42,7 +42,8 @@ const DEFAULT_SETTINGS = {
   notificationSettings: {
     suhoor: true,
     iftar: true,
-    daily: true
+    daily: true,
+    prayers: true  // Enable prayer notifications
   }
 };
 
@@ -103,6 +104,32 @@ function schedulePrayerNotifications(timings, notificationSettings, onSchedule) 
   
   const now = new Date();
   const schedules = [];
+  
+  // Schedule prayer time notifications
+  if (notificationSettings.prayers) {
+    const prayerOrder = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
+    
+    prayerOrder.forEach(prayer => {
+      if (timings[prayer]) {
+        const prayerTime = timings[prayer].split(":");
+        const prayerHour = parseInt(prayerTime[0]);
+        const prayerMinute = parseInt(prayerTime[1]);
+        
+        const target = new Date();
+        target.setHours(prayerHour, prayerMinute, 0, 0);
+        
+        // Only schedule if in the future
+        if (target > now) {
+          schedules.push({
+            type: "PRAYER_NOTIFICATION",
+            time: target.getTime(),
+            prayerName: prayer,
+            message: `Il est temps d'accomplir la prière de ${prayer} !`
+          });
+        }
+      }
+    });
+  }
   
   if (notificationSettings.suhoor && timings.Fajr) {
     const fajrTime = timings.Fajr.split(":");
@@ -241,7 +268,16 @@ export default function App() {
   useEffect(() => {
     const stored = loadSettings();
     if (stored) {
-      setSettings({ ...DEFAULT_SETTINGS, ...stored });
+      // Ensure all notification settings exist
+      const mergedSettings = {
+        ...DEFAULT_SETTINGS,
+        ...stored,
+        notificationSettings: {
+          ...DEFAULT_SETTINGS.notificationSettings,
+          ...(stored.notificationSettings || {})
+        }
+      };
+      setSettings(mergedSettings);
     }
     setIsLoading(false);
   }, []);
@@ -249,6 +285,23 @@ export default function App() {
   useEffect(() => {
     saveSettings(settings);
   }, [settings]);
+
+  useEffect(() => {
+    // Schedule notifications when settings or timings change
+    // Only if notifications are enabled and we have timings
+    if (timings && settings.notificationsEnabled && settings.notificationSettings) {
+      schedulePrayerNotifications(timings, settings.notificationSettings, (schedules) => {
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.ready.then((registration) => {
+            registration.active?.postMessage({
+              type: "SCHEDULE_PRAYER_NOTIFICATIONS",
+              schedules: schedules
+            });
+          });
+        }
+      });
+    }
+  }, [settings, timings]);
 
   useEffect(() => {
     let isMounted = true;
